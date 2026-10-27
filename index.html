@@ -500,7 +500,7 @@ h2{font-family:var(--font-read);font-size:1.4rem;margin:2.5rem 0 .25rem}
 
   <h2 class="section-head">Test prep <span class="es">Preparación para el examen</span></h2>
   <div class="bell-head" style="margin-bottom:.5rem">
-    <p class="gl-note" style="margin:0;flex:1 1 16rem">Five ELPA21-style questions in 20 minutes. Your answers are graded automatically and sent to your teacher at the end.<span class="es">Cinco preguntas al estilo ELPA21 en 20 minutos. Tus respuestas se califican automáticamente y se envían a tu maestro al final.</span></p>
+    <p class="gl-note" style="margin:0;flex:1 1 16rem">Five ELPA21-style questions in 20 minutes. Your answers are graded automatically on this page; show your score to your teacher.<span class="es">Cinco preguntas al estilo ELPA21 en 20 minutos. Tus respuestas se califican automáticamente en esta página; muestra tu puntuación a tu maestro.</span></p>
     <div class="timer"><span id="timer6Text">20:00</span><button id="timer6Btn">Start</button></div>
   </div>
   <h2>Test prep 1 · Reading a graph <span class="es">Preparación 1 · Leer una gráfica</span></h2>
@@ -646,8 +646,8 @@ h2{font-family:var(--font-read);font-size:1.4rem;margin:2.5rem 0 .25rem}
       <span id="exitWords" class="pill">0 words</span>
     </div>
     <p class="feedback" id="exitFb">Still to write: O, R, E, A, C.</p>
-    <div class="acts"><a id="submitLink" class="btn-link" href="https://form.jotform.com/262995533300054" target="_blank" rel="noopener" aria-disabled="true">Submit my results and exit ticket</a></div>
-    <p class="chart-note" id="submitNote" style="text-align:left">Finish all five Test prep questions and your exit ticket to turn on Submit. It opens a short form with everything already filled in.</p>
+    <div class="acts"><a id="submitLink" class="btn-link" href="https://form.jotform.com/262995533300054" target="_blank" rel="noopener" aria-disabled="true">Submit my exit ticket</a></div>
+    <p class="chart-note" id="submitNote" style="text-align:left">Finish your exit ticket to turn on Submit. It opens a short form with your answer already filled in.</p>
   </section>
 </div>
 
@@ -1482,7 +1482,7 @@ function updateSubmitLink(){
   const link = document.getElementById('submitLink');
   const answered = Object.values(results).every(v => v !== null);
   const ex = exitStats();
-  const done = answered && ex.ok;
+  const done = ex.ok;
   const n = Object.values(results).filter(v => v === true).length;
   const line = q => results[q] === null ? 'not answered' : results[q] ? 'correct' : 'incorrect';
   const vals = {
@@ -1494,22 +1494,12 @@ function updateSubmitLink(){
   };
   // Jotform prefills by each field's "unique name". Send both the names we asked for
   // and the names Jotform generates from the labels, so either set works.
-  const p = new URLSearchParams({
-    studentName: vals.name,
-    score: vals.score, scoreOut: vals.score,
-    rating: vals.rating, practiceElpa21: vals.rating,
-    q1: vals.q1, q1Reading: vals.q1,
-    q2: vals.q2, q2Word: vals.q2,
-    q3: vals.q3, q3Supporting: vals.q3,
-    q4: vals.q4, q4Authors: vals.q4,
-    q5: vals.q5, q5Listening: vals.q5,
-    exitTicket: vals.exit, exitTicketWho: vals.exit
-  });
+  const p = new URLSearchParams({ studentName: vals.name, exitTicket: vals.exit, exitTicketWho: vals.exit });
   link.href = FORM_URL + '?' + p.toString();
   link.setAttribute('aria-disabled', done ? 'false' : 'true');
   document.getElementById('submitNote').innerHTML = done
-    ? bi('Press Submit. A short form opens with your results and exit ticket filled in; add your class period and your Part B sentence, then press Submit there.','Pulsa Enviar. Se abre un formulario corto con tus resultados y tu boleto de salida ya llenos; agrega tu periodo de clase y tu oración de la Parte B, y luego pulsa Enviar ahí.')
-    : !answered ? bi('Finish all five Test prep questions first.','Primero termina las cinco preguntas de preparación.') : bi('Finish your O·R·E·A·C exit ticket (all five letters, 3 vocabulary words) to turn on Submit.','Termina tu boleto de salida O·R·E·A·C (las cinco letras, 3 palabras de vocabulario) para activar Enviar.');
+    ? bi('Press Submit. A short form opens with your exit ticket filled in; check your name, add your class period, then press Submit there.','Pulsa Enviar. Se abre un formulario corto con tu boleto de salida ya lleno; revisa tu nombre, agrega tu periodo de clase y luego pulsa Enviar ahí.')
+    : bi('Finish your O·R·E·A·C exit ticket (all five letters, 3 vocabulary words) to turn on Submit.','Termina tu boleto de salida O·R·E·A·C (las cinco letras, 3 palabras de vocabulario) para activar Enviar.');
 }
 document.getElementById('sname').addEventListener('input', updateSubmitLink);
 

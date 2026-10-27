@@ -6,7 +6,7 @@ Live: https://radan55.github.io/Stormattention/
 
 **Teacher notes**
 - Unlock code for the attention-check pop-up: see `TEACHER_CODE` in `index.html` (currently `1103`).
-- Results and exit tickets submit to the Jotform at `FORM_URL` in `index.html`.
+- Exit tickets (name, class period, O·R·E·A·C paragraph) submit to the Jotform at `FORM_URL` in `index.html`; test prep is graded on the page only.
 - Audio uses the browser's built-in voices (best in Chrome/Edge).
 
 Part of EL Publishing · Many Voices · One Storm
