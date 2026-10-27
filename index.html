@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+html{color-scheme:light}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Your Attention Is for Sale</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: one reading column (~65ch), a sticky audio bar, a side/bottom vocabulary card */
+:root{
+  --bg:#fbf8f2; --surface:#ffffff; --fg:#1f1b16; --muted:#6b6257;
+  --accent:#b8441f; --accent-soft:#fbe6dd; --line:#e4dccf;
+  --vocab:#1e5a8a; --vocab-soft:#e3eef7; --active:#fff3cf;
+  --font-read:"Literata",Georgia,"Times New Roman",serif;
+  --font-ui:"Atkinson Hyperlegible","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#16140f; --surface:#211e18; --fg:#efe9df; --muted:#a79d8f;
+  --accent:#f07a4f; --accent-soft:#3a2117; --line:#3a352c;
+  --vocab:#7fb6e8; --vocab-soft:#1b2d3f; --active:#3b3312; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#16140f; --surface:#211e18; --fg:#efe9df; --muted:#a79d8f;
+  --accent:#f07a4f; --accent-soft:#3a2117; --line:#3a352c;
+  --vocab:#7fb6e8; --vocab-soft:#1b2d3f; --active:#3b3312; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);margin:0;line-height:1.5}
+.wrap{max-width:72ch;margin:0 auto;padding-block:1.5rem 4rem;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.eyebrow{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--font-read);font-size:clamp(1.9rem,5vw,2.6rem);line-height:1.1;margin:.25rem 0 1rem;text-wrap:balance;font-weight:700}
+.howto{font-size:.95rem;color:var(--muted);margin:0 0 1.25rem;max-width:60ch}
+
+/* Today strip */
+.today{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:1rem;margin-bottom:1rem;border-top:4px solid var(--accent);padding-top:.8rem}
+.today-eq,.today-obj{min-width:0}
+.today-obj ul{margin:.3rem 0 0;padding-left:1.1rem;display:grid;gap:.35rem;font-size:.95rem}
+
+/* Bell ringer */
+.bell{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1rem 1.1rem;margin-bottom:1rem;display:grid;gap:.7rem}
+.bell-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}
+.bell-title{font-family:var(--font-read);font-size:1.4rem;font-weight:700;margin:.1rem 0 0}
+.timer{display:flex;align-items:center;gap:.5rem}
+.timer span{font-family:var(--font-ui);font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);min-width:3.6rem;text-align:right}
+.timer span.done{color:#2e7d4f}
+.bell-dir,.bell-note{margin:0;font-size:.95rem}
+.bell-note{color:var(--muted)}
+.bell-list{margin:0;padding-left:1.3rem;display:grid;gap:.5rem}
+.bell-list li{display:flex;justify-content:space-between;align-items:center;gap:.8rem;flex-wrap:wrap;font-size:1.02rem}
+.bell-list li span{flex:1 1 16rem;min-width:0}
+.ad{display:flex;gap:.4rem}
+.ad button{padding:.35rem .7rem;font-size:.9rem}
+.ad button.on,#padEraser.on{background:var(--vocab);border-color:var(--vocab);color:#fff;font-weight:700}
+
+.draw{border-top:1px solid var(--line);padding-top:.9rem;display:grid;gap:.7rem}
+.pad-tools{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center}
+.sw{width:1.7rem;height:1.7rem;border-radius:50%;padding:0;border:2px solid var(--line)}
+.sw.on{outline:3px solid var(--vocab);outline-offset:2px}
+#pad{width:100%;max-width:100%;aspect-ratio:900/520;height:auto;background:#fff;border:1px solid var(--line);border-radius:10px;touch-action:none;cursor:crosshair;display:block}
+
+/* Fake feed */
+.feedlab{margin:0}
+.phone{max-width:24rem;margin:0 auto;border:3px solid var(--fg);border-radius:22px;overflow:hidden;background:var(--surface)}
+.phone-top{display:flex;border-bottom:1px solid var(--line);font-family:var(--font-ui)}
+.phone-tab{flex:1;text-align:center;padding:.6rem;font-size:.9rem;border:none;border-radius:0;background:var(--surface);color:var(--muted);position:relative}
+.phone-tab.on{color:var(--fg);font-weight:700;box-shadow:inset 0 -3px 0 var(--vocab)}
+.badge{display:inline-grid;place-items:center;min-width:1.3rem;height:1.3rem;padding:0 .3rem;border-radius:999px;background:#d7261e;color:#fff;font-size:.75rem;font-weight:700;margin-left:.3rem;vertical-align:middle}
+.feed{height:22rem;overflow-y:auto;padding:.6rem;display:grid;gap:.6rem;align-content:start;overscroll-behavior:contain}
+.post{border:1px solid var(--line);border-radius:12px;padding:.6rem .7rem;font-size:.9rem;display:grid;gap:.35rem;background:var(--bg)}
+.post .who{display:flex;align-items:center;gap:.45rem;font-size:.8rem;color:var(--muted)}
+.post .av{width:1.5rem;height:1.5rem;border-radius:50%;background:var(--line)}
+.post .pic{height:5rem;border-radius:8px;background:repeating-linear-gradient(135deg,var(--line) 0 8px,var(--surface) 8px 16px)}
+.post.reward{background:var(--active);border-color:var(--accent)}
+.post.reward .pic{background:linear-gradient(135deg,var(--accent),#e6b800)}
+.post .likes{font-size:.8rem;color:var(--muted)}
+.feed-results{margin-top:1rem;border-top:1px solid var(--line);padding-top:.8rem;display:grid;gap:.6rem}
+.feed-results ul{margin:0;padding-left:1.1rem;display:grid;gap:.25rem}
+#trickPoll button{text-align:left}
+
+/* Karaoke highlight */
+.s{border-radius:4px;transition:background .15s}
+.s.now{background:var(--vocab-soft);box-shadow:0 0 0 3px var(--vocab-soft)}
+
+/* Stop and jot */
+.jot{border:2px dashed var(--accent);border-radius:12px;padding:.7rem .9rem;font-family:var(--font-ui);font-size:.95rem;display:grid;gap:.4rem;background:var(--surface)}
+.jot.now{background:var(--accent-soft);border-style:solid}
+.jot-head{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex-wrap:wrap}
+.jot p{margin:0}
+.jot-text{width:100%;font-family:var(--font-read);font-size:1rem;padding:.5rem .6rem;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);resize:vertical;min-width:0}
+
+/* Bilingual */
+.es{display:block;font-size:.92em;color:var(--muted);font-style:italic;margin-top:.15em;font-family:var(--font-ui);font-weight:400}
+b .es,i .es,u .es{display:inline}
+button .es,.choices .es{display:block;font-size:.85em}
+.poll button .es,.ad button .es{display:inline;margin-left:.3em;font-size:.85em}
+body.no-es .es,body.no-es .para-es,body.no-es .es-toggle{display:none!important}
+.lang{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;display:flex;justify-content:flex-end;margin-bottom:.5rem}
+.lang button{font-weight:700;background:var(--vocab);color:#fff;border-color:var(--vocab);border-radius:999px;padding:.35rem .9rem}
+.es-toggle{font-size:.8rem;padding:.2rem .55rem;margin:.3rem 0 0 2.9rem;color:var(--vocab);border-color:var(--vocab)}
+.para-es{display:none;margin:.3rem .75rem .2rem 2.9rem;padding:.5rem .7rem;border-left:3px solid var(--vocab);background:var(--vocab-soft);border-radius:0 8px 8px 0;font-size:1.02rem;line-height:1.55;font-style:italic;color:var(--fg)}
+.para-es.open{display:block}
+
+/* Lesson frame */
+.lesson{display:grid;gap:1rem;margin-bottom:1.75rem}
+.hook{background:var(--accent-soft);border-radius:14px;padding:1rem 1.1rem}
+.hook-q{font-family:var(--font-read);font-size:1.35rem;font-weight:600;margin:.2rem 0 .7rem;text-wrap:balance}
+.poll{display:flex;flex-wrap:wrap;gap:.5rem}
+.poll button{background:var(--surface)}
+.poll button.picked{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.hook-note{margin:.7rem 0 0;font-size:.95rem}
+.eq{border-left:5px solid var(--accent);padding:.3rem 0 .3rem 1rem}
+.eq-q{font-family:var(--font-read);font-size:1.5rem;font-weight:700;margin:.15rem 0 0;line-height:1.25;text-wrap:balance}
+.frame-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:1rem}
+.frame-box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.9rem 1rem;min-width:0;font-size:.92rem}
+.obj-label{margin:.6rem 0 .2rem;font-weight:700;font-size:.85rem;color:var(--accent)}
+.frame-box ul{margin:0;padding-left:1.1rem;display:grid;gap:.3rem}
+.std b{color:var(--vocab)}
+
+/* Audio bar */
+.player{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:.7rem .9rem;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-bottom:1.75rem;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+button{font-family:var(--font-ui);font-size:.95rem;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:.5rem .85rem}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--vocab);outline-offset:2px}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;min-width:7.5rem}
+.btn-primary:disabled{opacity:.6;cursor:default}
+.ctrl{display:flex;align-items:center;gap:.4rem;font-size:.9rem;color:var(--muted)}
+.ctrl select{font-family:var(--font-ui);font-size:.9rem;padding:.4rem .5rem;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);max-width:11rem}
+.status{font-size:.85rem;color:var(--muted);flex-basis:100%}
+.nosupport{display:none;background:var(--accent-soft);border-radius:8px;padding:.6rem .8rem;font-size:.9rem;flex-basis:100%}
+
+/* Passage */
+.passage{font-family:var(--font-read);font-size:1.2rem;line-height:1.7;display:grid;gap:1.1rem}
+.para{position:relative;padding:.5rem .75rem .5rem 2.9rem;border-radius:10px;transition:background .2s}
+.para.reading{background:var(--active)}
+.pnum{position:absolute;left:.75rem;top:.6rem;display:flex;flex-direction:column;align-items:center;gap:.2rem}
+.pnum span{font-family:var(--font-ui);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.pplay{width:1.7rem;height:1.7rem;padding:0;border-radius:50%;display:grid;place-items:center;font-size:.7rem;line-height:1}
+.pplay.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.para p{margin:0}
+.v{font-weight:700;color:var(--vocab);background:var(--vocab-soft);border-radius:4px;padding:0 .2em;cursor:pointer;border:none;font:inherit;text-decoration:underline dotted;text-underline-offset:3px}
+.v:hover{filter:brightness(.92)}
+.v.open{outline:2px solid var(--vocab)}
+
+/* Attention check overlay */
+.focus-overlay[hidden],.feed-results[hidden],.rating[hidden]{display:none}
+.focus-overlay{position:fixed;inset:0;z-index:50;background:rgba(20,16,10,.72);display:grid;place-items:center;padding:1rem}
+.focus-box{background:var(--surface);color:var(--fg);border:3px solid var(--accent);border-radius:16px;padding:1.4rem 1.5rem;max-width:26rem;width:100%;text-align:center;display:grid;gap:.6rem;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.focus-icon{font-size:2.4rem;line-height:1}
+.focus-title{font-family:var(--font-read);font-size:1.5rem;font-weight:700;margin:0;text-wrap:balance}
+.focus-msg,.focus-stat{margin:0;font-size:.98rem}
+.focus-stat{color:var(--muted);font-size:.88rem;font-variant-numeric:tabular-nums}
+.focus-box .btn-primary{font-size:1.05rem;padding:.6rem 1.4rem}
+.focus-form{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:0}
+.focus-form input{font-family:var(--font-ui);font-size:1.1rem;letter-spacing:.15em;padding:.55rem .7rem;border-radius:8px;border:2px solid var(--line);background:var(--bg);color:var(--fg);width:11rem;max-width:100%;text-align:center}
+.focus-form input.shake{border-color:var(--accent);animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.focus-err{color:var(--accent);min-height:1.2em}
+@keyframes focusPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.focus-box{animation:focusPulse 1.2s ease-in-out 2}
+@media (prefers-reduced-motion:reduce){.focus-box{animation:none}}
+
+/* Vocabulary card */
+.card{position:fixed;z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18);
+  padding:1rem 1.1rem;width:min(26rem,calc(100vw - 32px));left:50%;transform:translateX(-50%);
+  bottom:calc(16px + env(safe-area-inset-bottom,0px));display:none}
+.card.show{display:block}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:.6rem}
+.card .word{font-family:var(--font-read);font-size:1.5rem;font-weight:700;color:var(--vocab);margin:0}
+.card .pos{font-size:.8rem;color:var(--muted);font-style:italic}
+.card .def{margin:.5rem 0 0;font-size:1.02rem}
+.card .es{margin:.4rem 0 0;font-size:.92rem;color:var(--muted)}
+.card .es b{color:var(--fg);font-weight:700}
+.card .ex{margin:.6rem 0 0;font-family:var(--font-read);font-size:.98rem;border-left:3px solid var(--vocab);padding-left:.6rem}
+.card .acts{display:flex;gap:.5rem;margin-top:.8rem;flex-wrap:wrap}
+.close{padding:.3rem .55rem;font-size:.85rem}
+
+h2{font-family:var(--font-read);font-size:1.4rem;margin:2.5rem 0 .25rem}
+.section-head{font-size:1.9rem;border-top:4px solid var(--accent);padding-top:.8rem;margin-top:3rem}
+.gl-note{color:var(--muted);font-size:.9rem;margin:0 0 .9rem}
+.notebook{margin-top:2rem}
+.nb-ex{display:grid;grid-template-columns:1fr 3fr;gap:.5rem;font-size:.9rem;padding:.4rem .6rem;border-bottom:2px solid var(--line);font-weight:700;color:var(--muted)}
+.nb-row{font-weight:400;color:var(--fg);border-bottom:1px dashed var(--line);font-family:var(--font-read)}
+.nb-row span:first-child{color:var(--vocab);font-weight:700}
+/* Vocabulary match */
+.vm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem}
+.vm-col{display:grid;gap:.45rem;align-content:start;min-width:0}
+.vm-col button{text-align:left;padding:.55rem .7rem;line-height:1.35;font-size:.95rem}
+#vmWords button{font-family:var(--font-read);font-weight:700;font-size:1.05rem;color:var(--vocab)}
+.vm-col button.sel{outline:3px solid var(--vocab);outline-offset:1px}
+.vm-col button.hit{background:#e4f3ea;border-color:#2e7d4f;color:#163d27;cursor:default}
+.vm-col button.miss{background:var(--accent-soft);border-color:var(--accent)}
+
+/* Practice item */
+.item{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:1rem 1.1rem;display:grid;gap:.9rem}
+.item-dir,.item-q,.item-ext{margin:0;font-size:1rem}
+.chart{margin:0;border:1px solid var(--line);border-radius:10px;padding:.6rem .6rem .3rem;background:var(--bg)}
+.chart figcaption{font-weight:700;text-align:center;margin-bottom:.3rem;font-size:.95rem}
+.chart svg{width:100%;max-width:560px;display:block;margin:0 auto;font-family:var(--font-ui)}
+.chart .grid line{stroke:var(--line);stroke-width:1}
+.chart .tick text{fill:var(--muted);font-size:12px;text-anchor:end;font-variant-numeric:tabular-nums}
+.chart .bars rect{fill:var(--vocab)}
+.chart .val{fill:var(--fg);font-size:13px;font-weight:700;text-anchor:middle}
+.chart .cat text{fill:var(--fg);font-size:13px;text-anchor:middle}
+.chart .axis{fill:var(--muted);font-size:12px;text-anchor:middle}
+.chart-note{margin:.3rem 0 0;font-size:.75rem;color:var(--muted);text-align:center}
+.choices{display:grid;gap:.5rem}
+.choices button{text-align:left;display:flex;gap:.6rem;align-items:flex-start;padding:.6rem .75rem;line-height:1.4}
+.letter{flex:none;width:1.6rem;height:1.6rem;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.choices button.correct{border-color:#2e7d4f;background:#e4f3ea;color:#163d27}
+.choices button.correct .letter{border-color:#2e7d4f;background:#2e7d4f;color:#fff}
+.choices button.wrong{border-color:var(--accent);background:var(--accent-soft)}
+.feedback{margin:0;font-size:.95rem;min-height:1.2em}
+.choices button:disabled{cursor:default;opacity:.85}
+.choices button.correct:disabled,.choices button.wrong:disabled{opacity:1}
+.choices button.picked{border-color:var(--vocab);background:var(--vocab-soft)}
+.choices button.picked .letter{border-color:var(--vocab);background:var(--vocab);color:#fff}
+.score input{font-family:var(--font-ui);font-size:.95rem;padding:.45rem .6rem;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);min-width:0;width:min(18rem,100%)}
+.score-row{display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap}
+.score-big{font-family:var(--font-read);font-size:3rem;font-weight:700;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.score-big small{font-size:1.1rem;color:var(--muted);margin-left:.2rem;font-family:var(--font-ui)}
+.score-list{list-style:none;margin:0;padding:0;display:grid;gap:.35rem;font-size:.95rem}
+.score-list em{color:var(--muted);font-style:normal;margin-left:.35rem}
+.dot{display:inline-block;width:.75rem;height:.75rem;border-radius:50%;background:var(--line);margin-right:.5rem;vertical-align:middle}
+.score-list li.ok .dot{background:#2e7d4f}.score-list li.no .dot{background:var(--accent)}
+.score .acts{display:flex;gap:.5rem;flex-wrap:wrap}
+.exit .eq-q{font-size:1.35rem;margin:.1rem 0 0}
+.starters{margin:0;padding-left:1.1rem;font-family:var(--font-read);font-size:1rem;display:grid;gap:.25rem;color:var(--muted)}
+#exitText{width:100%;font-family:var(--font-read);font-size:1.1rem;line-height:1.6;padding:.7rem .8rem;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);resize:vertical;min-width:0}
+.oreac{display:grid;gap:.5rem}
+.oreac-row{display:flex;gap:.7rem;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:.55rem .7rem;background:var(--bg)}
+.oreac-row.filled{border-color:#2e7d4f}
+.oreac-letter{flex:none;width:2.1rem;height:2.1rem;border-radius:50%;display:grid;place-items:center;font-family:var(--font-read);font-weight:700;font-size:1.15rem;background:var(--accent);color:#fff}
+.oreac-row.filled .oreac-letter{background:#2e7d4f}
+.oreac-body{flex:1;min-width:0;display:grid;gap:.3rem;font-size:.92rem;color:var(--muted)}
+.oreac-body b{color:var(--fg)}
+.oreac-in{font-family:var(--font-read);font-size:1.02rem;color:var(--fg);padding:.5rem .6rem;border-radius:8px;border:1px solid var(--line);background:var(--surface);min-width:0;width:100%}
+.oreac-out{margin:0;font-family:var(--font-read);font-size:1.08rem;line-height:1.6;border-left:4px solid var(--vocab);padding:.5rem .8rem;background:var(--bg);border-radius:0 8px 8px 0;min-height:3rem}
+.exit-meter{display:flex;gap:.5rem;flex-wrap:wrap}
+.pill{font-size:.85rem;padding:.25rem .65rem;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--muted);font-variant-numeric:tabular-nums}
+.pill.ok{background:#e4f3ea;border-color:#2e7d4f;color:#163d27}
+.btn-link{display:inline-block;text-decoration:none;font-weight:700;background:var(--accent);color:#fff;border-radius:8px;padding:.55rem 1rem;font-size:.95rem}
+.btn-link[aria-disabled="true"]{opacity:.45;pointer-events:none}
+.listen-box{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap}
+.rating{border-left:5px solid var(--vocab);background:var(--vocab-soft);border-radius:0 10px 10px 0;padding:.7rem .9rem}
+.rating-level strong{display:block;font-family:var(--font-read);font-size:1.4rem;color:var(--vocab)}
+.rating p{margin:.3rem 0 0;font-size:.95rem}
+.quote{margin:0;font-family:var(--font-read);font-size:1.1rem;border-left:4px solid var(--line);padding:.4rem 0 .4rem .9rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="lang"><button id="langBtn" aria-pressed="true">Español: ON</button></div>
+  <div class="eyebrow">Read &amp; listen · Informational text <span class="es">Lee y escucha · Texto informativo</span></div>
+  <h1>Your Attention Is for Sale</h1>
+  <p class="howto">Press <strong>Listen to all</strong> to hear the whole passage, or the round button beside a paragraph to hear only that part. Tap any <span class="v" style="cursor:default">blue word</span> to see what it means.</p>
+
+  <section class="today" aria-label="Today's lesson">
+    <div class="today-eq">
+      <div class="eyebrow">Essential question</div>
+      <p class="eq-q">Who controls your attention, and how can you take it back?</p>
+    </div>
+    <div class="today-obj">
+      <div class="eyebrow">Today I can…</div>
+      <ul>
+        <li><b>Read &amp; listen:</b> find the central idea of the text and two details that support it.</li>
+        <li><b>Speak:</b> explain one tool apps use to hold attention, using the frame <i>“One tool designers use is ___. It works by ___.”</i></li>
+        <li><b>Write:</b> answer the essential question in 3–5 sentences using at least three vocabulary words.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="bell" aria-label="Bell ringer">
+    <div class="bell-head">
+      <div><div class="eyebrow">Bell ringer · 25 minutes · Part 1 · 10 minutes</div><p class="bell-title">Agree or disagree?</p></div>
+      <div class="timer"><span id="timerText">10:00</span><button id="timerBtn">Start</button></div>
+    </div>
+    <p class="bell-dir"><b>Step 1:</b> Read each statement and tap <b>Agree</b> or <b>Disagree</b>.<br><b>Step 2:</b> In your notebook, write one sentence for <u>each</u> of your four choices using the frame: <i>“I agree/disagree that ___ because ___.”</i><br><b>Step 3:</b> Be ready to read one of your sentences to the class.</p>
+    <ol class="bell-list" id="bell">
+      <li><span>Free apps are really free.</span><div class="ad"><button data-v="agree">Agree</button><button data-v="disagree">Disagree</button></div></li>
+      <li><span>I decide when I stop scrolling, not the app.</span><div class="ad"><button data-v="agree">Agree</button><button data-v="disagree">Disagree</button></div></li>
+      <li><span>A phone on the desk, face down and silent, does not hurt my focus.</span><div class="ad"><button data-v="agree">Agree</button><button data-v="disagree">Disagree</button></div></li>
+      <li><span>Schools should not allow phones in class.</span><div class="ad"><button data-v="agree">Agree</button><button data-v="disagree">Disagree</button></div></li>
+    </ol>
+    <p class="bell-note" id="bellNote">Example: <i>“I disagree that free apps are really free because they make money from ads.”</i> After reading, come back and see if you would change any answer.</p>
+
+    <div class="draw">
+      <div class="bell-head">
+        <div><div class="eyebrow">Part 2 · Draw it · 15 minutes</div><p class="bell-title">Draw what steals your attention</p></div>
+        <div class="timer"><span id="timer2Text">15:00</span><button id="timer2Btn">Start</button></div>
+      </div>
+      <p class="bell-dir"><b>Step 1:</b> Draw a picture of a time your phone pulled you away from something (homework, a conversation, sleep). Use the sketchpad below or your notebook.<br><b>Step 2:</b> Label your drawing with <u>three words</u>. Try to use words from the box: <i>notification, scrolling, attention, screen, interruption, distance</i>.<br><b>Step 3:</b> Under the drawing, write one sentence: <i>“In my picture, ___ is taking my attention because ___.”</i></p>
+      <div class="pad-tools">
+        <span class="ctrl">Color</span>
+        <button class="sw on" data-c="#1f1b16" style="background:#1f1b16" aria-label="Black"></button>
+        <button class="sw" data-c="#b8441f" style="background:#b8441f" aria-label="Orange"></button>
+        <button class="sw" data-c="#1e5a8a" style="background:#1e5a8a" aria-label="Blue"></button>
+        <button class="sw" data-c="#2e7d4f" style="background:#2e7d4f" aria-label="Green"></button>
+        <button class="sw" data-c="#e6b800" style="background:#e6b800" aria-label="Yellow"></button>
+        <label class="ctrl">Size <select id="padSize"><option value="3">Thin</option><option value="6" selected>Medium</option><option value="12">Thick</option></select></label>
+        <button id="padEraser">Eraser</button>
+        <button id="padClear">Clear</button>
+      </div>
+      <canvas id="pad" width="900" height="520" aria-label="Sketchpad. Draw with your mouse or finger."></canvas>
+      <p class="bell-note">Your drawing stays on this screen only. Hold it up or describe it to a partner; if your teacher wants a copy, take a screenshot.</p>
+    </div>
+  </section>
+
+  <section class="lesson" aria-label="Lesson frame">
+    <div class="hook">
+      <div class="bell-head">
+        <div class="eyebrow">Hook · Before you read · 30 minutes</div>
+        <div class="timer"><span id="timer3Text">30:00</span><button id="timer3Btn">Start</button></div>
+      </div>
+      <p class="hook-q">Pick up your phone right now. How many times have you unlocked it today?</p>
+      <div class="poll" id="poll">
+        <button data-v="0–10">0–10</button><button data-v="11–30">11–30</button><button data-v="31–60">31–60</button><button data-v="more than 60">More than 60</button>
+      </div>
+      <p class="hook-note" id="hookNote">Tap a number. Then talk with a partner: <em>Who decided how many times you checked it: you, or the phone?</em></p>
+    </div>
+  <section class="item feedlab" aria-label="Feel the tricks">
+    <div class="bell-head">
+      <div><div class="eyebrow">Feel the tricks · 60 seconds</div><p class="bell-title">Scroll this fake feed. We'll tell you what it did to you.</p></div>
+      <div class="timer"><span id="feedTimer">1:00</span><button id="feedStart" class="btn-primary">Start</button></div>
+    </div>
+    <p class="bell-dir">Press Start, then scroll the feed like you normally would until the timer ends. Tap anything you want.</p>
+    <div class="phone">
+      <div class="phone-top">
+        <span class="phone-tab on">Feed</span>
+        <button class="phone-tab" id="msgTab">Messages <span class="badge" id="badge" hidden>0</span></button>
+      </div>
+      <div class="feed" id="feed"></div>
+    </div>
+    <div class="feed-results" id="feedResults" hidden>
+      <div class="eyebrow">What just happened</div>
+      <ul id="feedStats"></ul>
+      <p class="item-q"><b>Which trick caught you most?</b></p>
+      <div class="poll" id="trickPoll">
+        <button data-v="infinite scroll">Infinite scroll · the feed never ended</button>
+        <button data-v="notification">Notification · the red badge pulled me</button>
+        <button data-v="variable reward">Variable reward · I kept looking for a good post</button>
+      </div>
+      <p class="item-ext" id="trickNote">In your notebook: <i>“The trick that caught me was ___ because ___.”</i> You will read about all three tricks in paragraph 2.</p>
+    </div>
+  </section>
+    <div class="frame-grid">
+      <div class="frame-box">
+        <div class="eyebrow">Objectives (full)</div>
+        <p class="obj-label">Content (ELA)</p>
+        <ul>
+          <li>Determine the central idea of the text and explain how the author supports it with evidence.</li>
+          <li>Figure out the meaning of academic words such as <i>infinite</i>, <i>variable reward</i>, and <i>awareness</i> from context.</li>
+          <li>Evaluate the author's argument: is the evidence strong enough to support the claim?</li>
+        </ul>
+        <p class="obj-label">Language (ELP)</p>
+        <ul>
+          <li><b>Listening/Reading:</b> I can listen to and read an informational text and identify its central idea and two supporting details.</li>
+          <li><b>Speaking:</b> I can tell a partner one way apps hold attention, using the sentence frame <i>“One tool designers use is ___. It works by ___.”</i></li>
+          <li><b>Writing:</b> I can write a 3–5 sentence response to the essential question using at least three vocabulary words.</li>
+        </ul>
+      </div>
+      <div class="frame-box">
+        <div class="eyebrow">Standards</div>
+        <p class="obj-label">Mississippi CCRS for ELA (Grades 9–10)</p>
+        <ul class="std">
+          <li><b>RI.9-10.1</b> Cite strong textual evidence to support analysis of what the text says explicitly and inferentially.</li>
+          <li><b>RI.9-10.2</b> Determine a central idea and analyze its development; provide an objective summary.</li>
+          <li><b>RI.9-10.4</b> Determine the meaning of words and phrases as they are used in a text.</li>
+          <li><b>RI.9-10.8</b> Evaluate the argument and specific claims; assess whether the evidence is relevant and sufficient.</li>
+          <li><b>SL.9-10.1</b> Participate in collaborative discussions, building on others' ideas.</li>
+        </ul>
+        <p class="obj-label">ELP Standards (ELPA21, Grades 9–12)</p>
+        <ul class="std">
+          <li><b>ELP 1</b> Construct meaning from oral presentations and grade-appropriate literary and informational text.</li>
+          <li><b>ELP 2</b> Participate in grade-appropriate oral and written exchanges of information and ideas.</li>
+          <li><b>ELP 4</b> Construct claims and support them with reasoning and evidence.</li>
+          <li><b>ELP 8</b> Determine the meaning of words and phrases in oral presentations and text.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+
+  <div class="player" role="region" aria-label="Audio player">
+    <button class="btn-primary" id="playAll">▶ Listen to all</button>
+    <button id="pauseBtn" disabled>⏸ Pause</button>
+    <button id="stopBtn" disabled>■ Stop</button>
+    <label class="ctrl">Speed
+      <select id="rate"><option value="0.75">Slow</option><option value="0.9" selected>Normal</option><option value="1.1">Fast</option></select>
+    </label>
+    <label class="ctrl">Voice <select id="voice"></select></label>
+    <div class="status" id="status">Ready. Six paragraphs, about four minutes.</div>
+    <div class="nosupport" id="nosupport">This browser cannot read aloud. Try Chrome, Edge, or Safari.</div>
+  </div>
+
+  <div class="passage" id="passage">
+    <div class="para" data-i="0"><div class="pnum"><span>1</span><button class="pplay" aria-label="Play paragraph 1">▶</button></div>
+      <p>The average American <button class="v" data-w="teenager">teenager</button> spends more than seven hours a day looking at a <button class="v" data-w="screen">screen</button>, not counting schoolwork. That number is not an accident. Most apps and games are free to download, so the companies that make them earn money another way: they sell your <button class="v" data-w="attention">attention</button>. Every minute you spend <button class="v" data-w="scrolling">scrolling</button> is a minute an <button class="v" data-w="advertiser">advertiser</button> pays for. The longer you stay, the more the company earns. This creates a problem. The apps are <button class="v" data-w="designed">designed</button> to keep you there.</p><button class="es-toggle" type="button" aria-expanded="false">Ver en español ▾</button><div class="para-es" lang="es">El adolescente estadounidense promedio pasa más de siete horas al día mirando una pantalla, sin contar las tareas escolares. Ese número no es un accidente. La mayoría de las apps y los juegos son gratis para descargar, así que las empresas que los hacen ganan dinero de otra manera: venden tu atención. Cada minuto que pasas deslizando la pantalla es un minuto que un anunciante paga. Cuanto más te quedas, más gana la empresa. Esto crea un problema. Las apps están diseñadas para mantenerte ahí.</div></div>
+
+    <div class="para" data-i="1"><div class="pnum"><span>2</span><button class="pplay" aria-label="Play paragraph 2">▶</button></div>
+      <p>Designers use several tools to do this. One is the <button class="v" data-w="infinite">infinite</button> scroll. Older websites had pages, and a page had an end. A feed has no end. Another tool is the <button class="v" data-w="notification">notification</button>, the small red circle or buzz that pulls you back. A third is the <button class="v" data-w="variable reward">variable reward</button>. Sometimes the next video is boring, and sometimes it is great. Because you never know which one is coming, your brain keeps checking, the same way a <button class="v" data-w="slot machine">slot machine</button> keeps a gambler pulling the lever.</p><button class="es-toggle" type="button" aria-expanded="false">Ver en español ▾</button><div class="para-es" lang="es">Los diseñadores usan varias herramientas para lograrlo. Una es el scroll infinito. Los sitios web antiguos tenían páginas, y una página tenía un final. Un feed no tiene final. Otra herramienta es la notificación, el pequeño círculo rojo o la vibración que te hace volver. Una tercera es la recompensa variable. A veces el siguiente video es aburrido, y a veces es buenísimo. Como nunca sabes cuál viene, tu cerebro sigue revisando, igual que una máquina tragamonedas hace que un jugador siga jalando la palanca.</div></div>
+
+    <div class="jot" data-after="1"><div class="jot-head"><span class="eyebrow">Stop and jot · after paragraphs 1–2</span><button class="jot-go" hidden>Continue reading ▶</button></div>
+      <p>In one sentence: <b>How do free apps make money, and why is that a problem?</b></p>
+      <textarea class="jot-text" rows="2" placeholder="Free apps make money by… This is a problem because…"></textarea></div>
+
+    <div class="para" data-i="2"><div class="pnum"><span>3</span><button class="pplay" aria-label="Play paragraph 3">▶</button></div>
+      <p>The effects are easy to <button class="v" data-w="measure">measure</button>. <button class="v" data-w="researchers">Researchers</button> at one university found that students who kept their phones on the desk, even face down and silent, scored lower on a <button class="v" data-w="memory">memory</button> test than students who left their phones in another room. The phone did not have to ring. Its <button class="v" data-w="presence">presence</button> alone used part of the brain's attention. Other studies show that it takes more than twenty minutes to fully return to a task after a single <button class="v" data-w="interruption">interruption</button>.</p><button class="es-toggle" type="button" aria-expanded="false">Ver en español ▾</button><div class="para-es" lang="es">Los efectos son fáciles de medir. Investigadores de una universidad descubrieron que los estudiantes que dejaban el teléfono sobre el escritorio, aunque estuviera boca abajo y en silencio, sacaban una puntuación más baja en una prueba de memoria que los estudiantes que dejaban el teléfono en otra habitación. El teléfono no tenía que sonar. Su sola presencia usaba parte de la atención del cerebro. Otros estudios muestran que se necesitan más de veinte minutos para volver por completo a una tarea después de una sola interrupción.</div></div>
+
+    <div class="para" data-i="3"><div class="pnum"><span>4</span><button class="pplay" aria-label="Play paragraph 4">▶</button></div>
+      <p>The effects on sleep and mood are related. Teens who use screens for more than five hours a day report more <button class="v" data-w="anxiety">anxiety</button> and less sleep than teens who use them for one hour. The connection does not prove that screens cause anxiety. However, the <button class="v" data-w="pattern">pattern</button> is strong enough that doctors now ask about screen time during <button class="v" data-w="checkups">checkups</button>.</p><button class="es-toggle" type="button" aria-expanded="false">Ver en español ▾</button><div class="para-es" lang="es">Los efectos en el sueño y el estado de ánimo están relacionados. Los adolescentes que usan pantallas más de cinco horas al día reportan más ansiedad y menos sueño que los que las usan una hora. La conexión no prueba que las pantallas causen ansiedad. Sin embargo, el patrón es tan fuerte que ahora los médicos preguntan por el tiempo de pantalla en los chequeos.</div></div>
+
+    <div class="jot" data-after="3"><div class="jot-head"><span class="eyebrow">Stop and jot · after paragraphs 3–4</span><button class="jot-go" hidden>Continue reading ▶</button></div>
+      <p>In one sentence: <b>What did the researchers find out about phones on the desk?</b></p>
+      <textarea class="jot-text" rows="2" placeholder="The researchers found that…"></textarea></div>
+
+    <div class="para" data-i="4"><div class="pnum"><span>5</span><button class="pplay" aria-label="Play paragraph 5">▶</button></div>
+      <p>The good news is that attention can be <button class="v" data-w="protected">protected</button>. The simplest solution is <button class="v" data-w="distance">distance</button>. Students who do homework with the phone in a backpack, a drawer, or another room finish faster and remember more. A second solution is to turn off notifications for every app except messages from family. A third is to decide in advance how long you will scroll and set a timer. The timer gives the feed an end.</p><button class="es-toggle" type="button" aria-expanded="false">Ver en español ▾</button><div class="para-es" lang="es">La buena noticia es que la atención se puede proteger. La solución más simple es la distancia. Los estudiantes que hacen la tarea con el teléfono en la mochila, en un cajón o en otra habitación terminan más rápido y recuerdan más. Una segunda solución es apagar las notificaciones de todas las apps excepto los mensajes de la familia. Una tercera es decidir de antemano cuánto tiempo vas a deslizar y poner un temporizador. El temporizador le da un final al feed.</div></div>
+
+    <div class="para" data-i="5"><div class="pnum"><span>6</span><button class="pplay" aria-label="Play paragraph 6">▶</button></div>
+      <p>Some schools have <button class="v" data-w="adopted">adopted</button> phone-free classrooms, and early results show better grades and fewer <button class="v" data-w="discipline referrals">discipline referrals</button>. But the most powerful solution is <button class="v" data-w="awareness">awareness</button>. Once you know that the app is built to hold you, you can choose when to put it down. Your attention is <button class="v" data-w="valuable">valuable</button>. Companies know it. The question is whether you do.</p><button class="es-toggle" type="button" aria-expanded="false">Ver en español ▾</button><div class="para-es" lang="es">Algunas escuelas han adoptado salones sin teléfonos, y los primeros resultados muestran mejores calificaciones y menos reportes disciplinarios. Pero la solución más poderosa es la conciencia. Una vez que sabes que la app está hecha para retenerte, puedes elegir cuándo dejarla. Tu atención es valiosa. Las empresas lo saben. La pregunta es si tú lo sabes.</div></div>
+
+    <div class="jot" data-after="5"><div class="jot-head"><span class="eyebrow">Stop and jot · after paragraphs 5–6</span><button class="jot-go" hidden>Done ✓</button></div>
+      <p>In one sentence: <b>Which solution would work best for you, and why?</b></p>
+      <textarea class="jot-text" rows="2" placeholder="The best solution for me is… because…"></textarea></div>
+  </div>
+
+  <h2 class="section-head">Design a different app <span class="es">Diseña una app diferente</span></h2>
+  <section class="item appdesign" aria-label="Design a different app">
+    <div class="bell-head">
+      <div><p class="bell-title" style="margin:0">Build an app that respects your attention</p></div>
+      <div class="timer"><span id="timer5Text">15:00</span><button id="timer5Btn">Start</button></div>
+    </div>
+    <p class="bell-dir">The apps in the passage are designed to <b>hold</b> you. Your job: design one that is designed to <b>let you go</b>. Fill in the plan; the phone screen builds itself as you type. Then copy your plan into your notebook and be ready to pitch it in 30 seconds.</p>
+    <div class="ad-grid">
+      <div class="ad-form">
+        <label class="ad-l">App name <input id="adName" type="text" maxlength="18" placeholder="e.g., Enough"></label>
+        <label class="ad-l">What is it for? (one sentence) <input id="adPurpose" type="text" maxlength="80" placeholder="e.g., Share photos with real friends, then stop."></label>
+        <div class="ad-l">Icon
+          <div class="poll" id="adIcons">
+            <button data-v="🌙">🌙</button><button data-v="🌱">🌱</button><button data-v="⏳">⏳</button><button data-v="🧭">🧭</button><button data-v="🛑">🛑</button><button data-v="📚">📚</button><button data-v="🎯">🎯</button><button data-v="🔕">🔕</button>
+          </div>
+        </div>
+        <div class="ad-l">Which tricks will your app <u>refuse</u> to use? (tap all that apply)
+          <div class="poll" id="adRefuse">
+            <button data-v="No infinite scroll">No infinite scroll</button><button data-v="No red badges">No red badges</button><button data-v="No variable rewards">No variable rewards</button><button data-v="No autoplay">No autoplay</button>
+          </div>
+        </div>
+        <label class="ad-l">How does your app give the feed <b>an end</b>? <input id="adEnd" type="text" maxlength="90" placeholder="e.g., After 20 posts it says “You're all caught up” and closes."></label>
+        <label class="ad-l">How does your app make money <b>without</b> selling attention? <input id="adMoney" type="text" maxlength="90" placeholder="e.g., $1 a month, no ads."></label>
+      </div>
+      <div class="ad-preview">
+        <div class="phone small">
+          <div class="ps-status"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="ps-icon" id="psIcon">📱</div>
+          <div class="ps-name" id="psName">Your app</div>
+          <div class="ps-purpose" id="psPurpose">What is it for?</div>
+          <div class="ps-list" id="psRefuse"><span class="ps-empty">Tap the tricks your app refuses to use.</span></div>
+          <div class="ps-end" id="psEnd">✓ You're all caught up.</div>
+          <div class="ps-money" id="psMoney">How does it make money?</div>
+        </div>
+      </div>
+    </div>
+    <p class="feedback" id="adStatus">0 of 6 parts done.</p>
+    <p class="item-ext"><b>Pitch it (30 seconds):</b> <i>“My app is called ___. It is for ___. It refuses to use ___ because ___. Instead of selling your attention, it ___.”</i></p>
+  </section>
+
+  <section class="item notebook" aria-label="Vocabulary notebook">
+    <div class="eyebrow">Vocabulary notebook</div>
+    <p class="item-q">As you read, tap each <span class="v" style="cursor:default">blue word</span> and copy it into your notebook with its meaning <b>in your own words</b>. Set up your page like this:</p>
+    <div class="nb-ex"><span>Word</span><span>My definition</span></div>
+    <div class="nb-ex nb-row"><span>notification</span><span>a buzz or red circle that tells me something new happened</span></div>
+    <p class="item-ext">Goal: at least <b>10 words</b> before you start the questions below. You may write the Spanish word next to the English word if it helps you remember.</p>
+  </section>
+
+  <h2>Vocabulary activity · Match the meaning <span class="es">Actividad de vocabulario · Une el significado</span></h2>
+  <p class="gl-note">Tap a word, then tap its meaning. Match all eight. Wrong matches turn orange so you can try again.<span class="es">Toca una palabra y luego su significado. Une las ocho. Los errores se ponen naranja para que lo intentes de nuevo.</span></p>
+  <section class="item vmatch" aria-label="Vocabulary matching">
+    <div class="vm-grid">
+      <div class="vm-col" id="vmWords"><div class="eyebrow">Words</div></div>
+      <div class="vm-col" id="vmDefs"><div class="eyebrow">Meanings</div></div>
+    </div>
+    <div class="exit-meter">
+      <span class="pill" id="vmStreak">🔥 Streak: 0</span>
+      <span class="pill" id="vmBest">Best streak: 0</span>
+      <span class="pill" id="vmSpeedPill" hidden>⏱ 1:00 · 0 matches</span>
+    </div>
+    <p class="feedback" id="vmStatus">0 of 8 matched.</p>
+    <div class="acts"><button id="vmShuffle">New set of words</button><button id="vmSpeed" class="btn-primary">⚡ 60-second speed round</button></div>
+    <p class="item-ext"><b>Use it:</b> In your notebook, write three sentences about your own phone habits. Use one vocabulary word in each sentence and underline it. Example: <i>“I turned off every <u>notification</u> except texts from my mom.”</i></p>
+  </section>
+
+  <h2 class="section-head">Test prep <span class="es">Preparación para el examen</span></h2>
+  <div class="bell-head" style="margin-bottom:.5rem">
+    <p class="gl-note" style="margin:0;flex:1 1 16rem">Five ELPA21-style questions in 20 minutes. Your answers are graded automatically and sent to your teacher at the end.<span class="es">Cinco preguntas al estilo ELPA21 en 20 minutos. Tus respuestas se califican automáticamente y se envían a tu maestro al final.</span></p>
+    <div class="timer"><span id="timer6Text">20:00</span><button id="timer6Btn">Start</button></div>
+  </div>
+  <h2>Test prep 1 · Reading a graph <span class="es">Preparación 1 · Leer una gráfica</span></h2>
+  <p class="gl-note">These five items are written in the style of ELPA21 questions. You get <b>one answer</b> per question, so think before you tap.<span class="es">Tienes <b>una sola respuesta</b> por pregunta, así que piensa antes de tocar. Las opciones de respuesta están en inglés, como en el examen real.</span></p>
+  <section class="item" aria-label="Practice question">
+    <p class="item-dir"><b>Directions:</b> A researcher asked teenagers how many hours they look at a screen each day and how many hours they sleep each night. The graph shows the results.<span class="es"><b>Instrucciones:</b> Un investigador preguntó a adolescentes cuántas horas miran una pantalla cada día y cuántas horas duermen cada noche. La gráfica muestra los resultados.</span></p>
+    <figure class="chart">
+      <figcaption>Average Hours of Sleep per Night, by Daily Screen Time</figcaption>
+      <svg viewBox="0 0 560 300" role="img" aria-label="Bar graph. Teens with 1 hour of screen time sleep 9.0 hours; 2 to 3 hours, 8.4; 4 to 5 hours, 7.8; more than 5 hours, 7.1.">
+        <!-- gridlines: 0,2,4,6,8,10 hours; baseline y=240, 22px per hour -->
+        <g class="grid">
+          <line x1="60" y1="240" x2="530" y2="240"/><line x1="60" y1="196" x2="530" y2="196"/><line x1="60" y1="152" x2="530" y2="152"/>
+          <line x1="60" y1="108" x2="530" y2="108"/><line x1="60" y1="64" x2="530" y2="64"/><line x1="60" y1="20" x2="530" y2="20"/>
+        </g>
+        <g class="tick">
+          <text x="52" y="244">0</text><text x="52" y="200">2</text><text x="52" y="156">4</text><text x="52" y="112">6</text><text x="52" y="68">8</text><text x="52" y="24">10</text>
+        </g>
+        <text class="axis" transform="rotate(-90) translate(-130 18)">Hours of sleep</text>
+        <g class="bars">
+          <rect x="95" y="42" width="70" height="198"/><text class="val" x="130" y="34">9.0</text>
+          <rect x="210" y="55.2" width="70" height="184.8"/><text class="val" x="245" y="47">8.4</text>
+          <rect x="325" y="68.4" width="70" height="171.6"/><text class="val" x="360" y="60">7.8</text>
+          <rect x="440" y="83.8" width="70" height="156.2"/><text class="val" x="475" y="76">7.1</text>
+        </g>
+        <g class="cat">
+          <text x="130" y="262">1 hour</text><text x="245" y="262">2–3 hours</text><text x="360" y="262">4–5 hours</text><text x="475" y="262">More than</text><text x="475" y="278">5 hours</text>
+        </g>
+        <text class="axis" x="295" y="296">Screen time per day</text>
+      </svg>
+      <p class="chart-note">Sample data for practice; numbers are not from a published study.</p>
+    </figure>
+    <p class="item-q"><b>Question:</b> Which statement is <u>best</u> supported by the graph <u>and</u> paragraph 4 of the passage?<span class="es"><b>Pregunta:</b> ¿Qué afirmación está <u>mejor</u> apoyada por la gráfica <u>y</u> el párrafo 4 del texto?</span></p>
+    <div class="choices" id="choices" role="group" aria-label="Answer choices">
+      <button data-k="A"><span class="letter">A</span> Teens who use screens for more than five hours a day sleep more than teens who use them for one hour.</button>
+      <button data-k="B" data-ok="1"><span class="letter">B</span> As daily screen time goes up, the average hours of sleep go down.</button>
+      <button data-k="C"><span class="letter">C</span> The graph proves that screens cause anxiety.</button>
+      <button data-k="D"><span class="letter">D</span> All teens sleep about nine hours no matter how long they use screens.</button>
+    </div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+    <p class="item-ext"><b>Part B (explain):</b> Write one sentence using the frame: <i>“The graph shows that ___, and paragraph 4 says ___.”</i><span class="es"><b>Parte B (explica):</b> Escribe una oración con el marco: «The graph shows that ___, and paragraph 4 says ___».</span></p>
+  </section>
+
+  <h2>Test prep 2 · Word meaning <span class="es">Preparación 2 · Significado de una palabra</span></h2>
+  <section class="item" aria-label="Practice question 2">
+    <p class="item-dir"><b>Directions:</b> Read the sentences from paragraph 3. Then answer the question.<span class="es"><b>Instrucciones:</b> Lee las oraciones del párrafo 3. Luego responde la pregunta.</span></p>
+    <blockquote class="quote">The phone did not have to ring. Its <b>presence</b> alone used part of the brain's attention.</blockquote>
+    <p class="item-q"><b>Question:</b> What does the word <b>presence</b> mean in these sentences?<span class="es"><b>Pregunta:</b> ¿Qué significa la palabra <b>presence</b> en estas oraciones?</span></p>
+    <div class="choices" data-item="q2" role="group" aria-label="Answer choices">
+      <button data-k="A"><span class="letter">A</span> the sound a phone makes</button>
+      <button data-k="B"><span class="letter">B</span> a gift that someone gives you</button>
+      <button data-k="C" data-ok="1"><span class="letter">C</span> the fact that the phone was there</button>
+      <button data-k="D"><span class="letter">D</span> a test of memory</button>
+    </div>
+    <p class="feedback" data-fb="q2" aria-live="polite"></p>
+  </section>
+
+  <h2>Test prep 3 · Supporting details <span class="es">Preparación 3 · Detalles de apoyo</span></h2>
+  <section class="item" aria-label="Practice question 3">
+    <p class="item-dir"><b>Directions:</b> Read the central idea. Then choose the details from the passage that support it.<span class="es"><b>Instrucciones:</b> Lee la idea central. Luego elige los detalles del texto que la apoyan.</span></p>
+    <p class="item-q"><b>Central idea:</b> Apps are designed to keep people using them for as long as possible.<span class="es"><b>Idea central:</b> Las apps están diseñadas para que la gente las use el mayor tiempo posible.</span></p>
+    <p class="item-q"><b>Question:</b> Choose <u>TWO</u> details from the passage that support this central idea.<span class="es"><b>Pregunta:</b> Elige <u>DOS</u> detalles del texto que apoyan esta idea central.</span></p>
+    <div class="choices" data-item="q3" data-multi="2" role="group" aria-label="Answer choices">
+      <button data-k="A" data-ok="1"><span class="letter">A</span> A feed has no end, so there is no natural place to stop scrolling.</button>
+      <button data-k="B"><span class="letter">B</span> Doctors now ask about screen time during checkups.</button>
+      <button data-k="C" data-ok="1"><span class="letter">C</span> Notifications, like a red circle or a buzz, pull people back to the app.</button>
+      <button data-k="D"><span class="letter">D</span> Students who keep phones in another room remember more.</button>
+      <button data-k="E"><span class="letter">E</span> Some schools have phone-free classrooms.</button>
+    </div>
+    <p class="feedback" data-fb="q3" aria-live="polite">Select two answers, then press Check.<span class="es">Elige dos respuestas y luego pulsa Revisar.</span></p>
+    <div><button id="checkQ3" class="btn-primary">Check answers</button></div>
+  </section>
+
+  <h2>Test prep 4 · Author's purpose <span class="es">Preparación 4 · Propósito del autor</span></h2>
+  <section class="item" aria-label="Practice question 4">
+    <p class="item-dir"><b>Directions:</b> Read the sentence from paragraph 2. Then answer the question.<span class="es"><b>Instrucciones:</b> Lee la oración del párrafo 2. Luego responde la pregunta.</span></p>
+    <blockquote class="quote">Because you never know which one is coming, your brain keeps checking, the same way a slot machine keeps a gambler pulling the lever.</blockquote>
+    <p class="item-q"><b>Question:</b> Why does the author compare an app to a slot machine?<span class="es"><b>Pregunta:</b> ¿Por qué el autor compara una app con una máquina tragamonedas?</span></p>
+    <div class="choices" data-item="q4" role="group" aria-label="Answer choices">
+      <button data-k="A"><span class="letter">A</span> to show that apps cost a lot of money to use</button>
+      <button data-k="B" data-ok="1"><span class="letter">B</span> to show that not knowing what comes next makes people keep checking</button>
+      <button data-k="C"><span class="letter">C</span> to show that most teenagers like to gamble</button>
+      <button data-k="D"><span class="letter">D</span> to show that videos are usually boring</button>
+    </div>
+    <p class="feedback" data-fb="q4" aria-live="polite"></p>
+  </section>
+
+  <h2>Test prep 5 · Listening <span class="es">Preparación 5 · Comprensión auditiva</span></h2>
+  <section class="item" aria-label="Practice question 5">
+    <p class="item-dir"><b>Directions:</b> Listen to the paragraph. You may listen two times. Then answer the question. (The text is hidden on purpose.)<span class="es"><b>Instrucciones:</b> Escucha el párrafo. Puedes escucharlo dos veces. Luego responde la pregunta. (El texto está oculto a propósito.)</span></p>
+    <div class="listen-box">
+      <button id="listenQ5" class="btn-primary">🔊 Play the paragraph</button>
+      <span id="listenCount" class="ctrl">Plays left: 2 <span class="es">Reproducciones restantes: 2</span></span>
+    </div>
+    <p class="item-q"><b>Question:</b> According to the speaker, what is the <u>simplest</u> way to protect your attention?<span class="es"><b>Pregunta:</b> Según el hablante, ¿cuál es la manera <u>más simple</u> de proteger tu atención?</span></p>
+    <div class="choices" data-item="q5" role="group" aria-label="Answer choices">
+      <button data-k="A"><span class="letter">A</span> set a timer before you start scrolling</button>
+      <button data-k="B"><span class="letter">B</span> turn off notifications for most apps</button>
+      <button data-k="C" data-ok="1"><span class="letter">C</span> put the phone far away, in a backpack or another room</button>
+      <button data-k="D"><span class="letter">D</span> ask your family to send fewer messages</button>
+    </div>
+    <p class="feedback" data-fb="q5" aria-live="polite"></p>
+  </section>
+
+  <h2>My score <span class="es">Mi puntuación</span></h2>
+  <section class="item score" aria-label="Score">
+    <label class="ctrl" for="sname">Name <input id="sname" type="text" placeholder="First and last name / Nombre y apellido" autocomplete="off"></label>
+    <div class="score-row">
+      <div class="score-big"><span id="scoreNum">0</span><small>/ 5</small></div>
+      <ul class="score-list" id="scoreList">
+        <li data-q="1"><span class="dot"></span>Q1 Reading a graph <em>not answered</em></li>
+        <li data-q="2"><span class="dot"></span>Q2 Word meaning <em>not answered</em></li>
+        <li data-q="3"><span class="dot"></span>Q3 Supporting details <em>not checked</em></li>
+        <li data-q="4"><span class="dot"></span>Q4 Author's purpose <em>not answered</em></li>
+        <li data-q="5"><span class="dot"></span>Q5 Listening <em>not answered</em></li>
+      </ul>
+    </div>
+    <p class="feedback" id="scoreMsg">Answer all five questions. Your score updates automatically.<span class="es">Responde las cinco preguntas. Tu puntuación se actualiza sola.</span></p>
+    <div class="rating" id="rating" hidden>
+      <div class="rating-level"><span class="eyebrow">Practice ELPA21 rating · Nivel de práctica ELPA21</span><strong id="ratingName"></strong></div>
+      <p id="ratingDesc"></p>
+      <p class="chart-note" style="text-align:left">This is a classroom practice estimate from five questions, not an official ELPA21 score.<span class="es">Esta es una estimación de práctica con cinco preguntas, no una puntuación oficial de ELPA21.</span></p>
+    </div>
+  </section>
+
+  <h2 class="section-head">Exit ticket <span class="es">Boleto de salida</span></h2>
+  <section class="item exit" aria-label="Exit ticket">
+    <div class="eyebrow">Essential question</div>
+    <p class="eq-q">Who controls your attention, and how can you take it back?</p>
+    <p class="item-dir">Write <b>one sentence for each letter</b> of <b>O·R·E·A·C</b>. Use at least <b>three vocabulary words</b> from the passage. Your five sentences become one paragraph at the bottom.</p>
+    <div class="oreac">
+      <label class="oreac-row"><span class="oreac-letter">O</span><span class="oreac-body"><b>Opinion</b> · Who controls your attention? <span class="es">¿Quién controla tu atención?</span> <input class="oreac-in" data-k="O" type="text" placeholder="I think ___ controls my attention because…"></span></label>
+      <label class="oreac-row"><span class="oreac-letter">R</span><span class="oreac-body"><b>Reason</b> · Why do you think so? <span class="es">¿Por qué piensas eso?</span> <input class="oreac-in" data-k="R" type="text" placeholder="One reason is that apps are designed to…"></span></label>
+      <label class="oreac-row"><span class="oreac-letter">E</span><span class="oreac-body"><b>Evidence</b> · A detail from the passage (paragraph number helps). <span class="es">Un detalle del texto (ayuda poner el número del párrafo).</span> <input class="oreac-in" data-k="E" type="text" placeholder="In paragraph ___, the author says…"></span></label>
+      <label class="oreac-row"><span class="oreac-letter">A</span><span class="oreac-body"><b>Analysis</b> · What does that evidence show? <span class="es">¿Qué muestra esa evidencia?</span> <input class="oreac-in" data-k="A" type="text" placeholder="This shows that…"></span></label>
+      <label class="oreac-row"><span class="oreac-letter">C</span><span class="oreac-body"><b>Conclusion</b> · How will you take your attention back? <span class="es">¿Cómo vas a recuperar tu atención?</span> <input class="oreac-in" data-k="C" type="text" placeholder="So, I will take my attention back by…"></span></label>
+    </div>
+    <div class="eyebrow" style="margin-top:.3rem">Your paragraph · Tu párrafo</div>
+    <p class="oreac-out" id="exitPreview"><span class="ps-empty">Your five sentences will appear here as one paragraph. <span class="es">Tus cinco oraciones aparecerán aquí como un párrafo.</span></span></p>
+    <textarea id="exitText" rows="2" hidden aria-hidden="true"></textarea>
+    <div class="exit-meter">
+      <span id="exitSent" class="pill">0 sentences</span>
+      <span id="exitVocab" class="pill">0 vocabulary words</span>
+      <span id="exitWords" class="pill">0 words</span>
+    </div>
+    <p class="feedback" id="exitFb">Still to write: O, R, E, A, C.</p>
+    <div class="acts"><a id="submitLink" class="btn-link" href="https://form.jotform.com/262995533300054" target="_blank" rel="noopener" aria-disabled="true">Submit my results and exit ticket</a></div>
+    <p class="chart-note" id="submitNote" style="text-align:left">Finish all five Test prep questions and your exit ticket to turn on Submit. It opens a short form with everything already filled in.</p>
+  </section>
+</div>
+
+<div class="focus-overlay" id="focusOverlay" hidden>
+  <div class="focus-box" role="alertdialog" aria-live="assertive" aria-label="Attention check">
+    <div class="focus-icon">👀</div>
+    <p class="focus-title" id="focusTitle">You left the lesson.</p><p class="focus-title es" id="focusTitleEs" style="font-size:1.15rem;margin-top:-.3rem">Saliste de la lección.</p>
+    <p class="focus-msg" id="focusMsg">Remember paragraph 1: every minute away is a minute someone else is paid for. Come back and finish strong.</p><p class="focus-msg es" id="focusMsgEs"></p>
+    <p class="focus-stat" id="focusStat"></p>
+    <p class="focus-msg"><b>Raise your hand.</b> Your teacher must enter the code to unlock the lesson.<span class="es"><b>Levanta la mano.</b> Tu maestro debe escribir el código para desbloquear la lección.</span></p>
+    <form class="focus-form" id="focusForm" autocomplete="off">
+      <input id="focusCode" type="password" inputmode="numeric" placeholder="Teacher code / Código" aria-label="Teacher code">
+      <button class="btn-primary" id="focusBack" type="submit">Unlock · Desbloquear ▶</button>
+    </form>
+    <p class="feedback focus-err" id="focusErr"></p>
+  </div>
+</div>
+
+<div class="card" id="card" role="dialog" aria-live="polite" aria-label="Word definition">
+  <div class="top"><div><p class="word" id="cWord"></p><span class="pos" id="cPos"></span></div><button class="close" id="cClose" aria-label="Close / Cerrar">✕</button></div>
+  <p class="def" id="cDef"></p>
+  <p class="es" id="cEs"></p>
+  <p class="ex" id="cEx"></p>
+  <div class="acts"><button id="cSay">🔊 Hear the word <span class="es">Oír la palabra</span></button><button id="cSayEx">🔊 Hear the example <span class="es">Oír el ejemplo</span></button></div>
+</div>
+
+<script>
+const VOCAB = {
+  "teenager":{pos:"noun",def:"A person who is between 13 and 19 years old.",es:"adolescente",defEs:"Una persona que tiene entre 13 y 19 años.",ex:"Most teenagers get their first phone in middle school."},
+  "screen":{pos:"noun",def:"The flat part of a phone, computer, or TV where you see pictures and words.",es:"pantalla",defEs:"La parte plana de un teléfono, computadora o televisor donde ves imágenes y palabras.",ex:"The screen of my phone cracked when it fell."},
+  "attention":{pos:"noun",def:"Careful looking, listening, or thinking about one thing.",es:"atención",defEs:"Mirar, escuchar o pensar con cuidado en una sola cosa.",ex:"The teacher asked for our attention before the test."},
+  "scrolling":{pos:"verb (-ing form)",def:"Moving your finger up or down to see more on a screen.",es:"deslizar / desplazarse (en la pantalla)",defEs:"Mover el dedo hacia arriba o abajo para ver más en una pantalla.",ex:"She kept scrolling through videos until midnight."},
+  "advertiser":{pos:"noun",def:"A company or person that pays to show ads for a product.",es:"anunciante",defEs:"Una empresa o persona que paga para mostrar anuncios de un producto.",ex:"The advertiser paid to put its shoe ad in the app."},
+  "designed":{pos:"verb (past)",def:"Planned and made for a specific purpose.",es:"diseñado",defEs:"Planeado y hecho con un propósito específico.",ex:"The game was designed to be hard to stop playing."},
+  "infinite":{pos:"adjective",def:"Without an end; going on forever.",es:"infinito",defEs:"Sin fin; que sigue para siempre.",ex:"The feed is infinite, so there is never a last post."},
+  "notification":{pos:"noun",def:"A message, sound, or red circle that tells you something new happened in an app.",es:"notificación",defEs:"Un mensaje, sonido o círculo rojo que te avisa que pasó algo nuevo en una app.",ex:"I got a notification that my friend posted a photo."},
+  "variable reward":{pos:"noun phrase",def:"A prize that is sometimes good and sometimes not, so you cannot predict it. (variable = changing; reward = prize)",es:"recompensa variable",defEs:"Un premio que a veces es bueno y a veces no, así que no puedes predecirlo.",ex:"A slot machine gives a variable reward: sometimes coins, usually nothing."},
+  "slot machine":{pos:"noun",def:"A gambling machine. You pull a lever or push a button and hope to win money.",es:"máquina tragamonedas",defEs:"Una máquina de juego. Jalas una palanca o aprietas un botón y esperas ganar dinero.",ex:"The casino was full of slot machines with flashing lights."},
+  "measure":{pos:"verb",def:"To find out the size or amount of something.",es:"medir",defEs:"Averiguar el tamaño o la cantidad de algo.",ex:"Scientists can measure how long students stay focused."},
+  "researchers":{pos:"noun (plural)",def:"People who study a subject carefully to learn new facts.",es:"investigadores",defEs:"Personas que estudian un tema con cuidado para descubrir datos nuevos.",ex:"Researchers tested 500 students in the study."},
+  "memory":{pos:"noun",def:"The ability to remember things.",es:"memoria",defEs:"La capacidad de recordar cosas.",ex:"Sleep is important for a good memory."},
+  "presence":{pos:"noun",def:"The fact of being in a place. (Something is present = it is there.)",es:"presencia",defEs:"El hecho de estar en un lugar.",ex:"Just the presence of the phone on the desk was a distraction."},
+  "interruption":{pos:"noun",def:"Something that stops you in the middle of what you are doing.",es:"interrupción",defEs:"Algo que te detiene en medio de lo que estás haciendo.",ex:"Each text message was an interruption to my homework."},
+  "anxiety":{pos:"noun",def:"A strong feeling of worry or nervousness.",es:"ansiedad",defEs:"Un sentimiento fuerte de preocupación o nervios.",ex:"Too little sleep can cause anxiety."},
+  "pattern":{pos:"noun",def:"Something that happens again and again in the same way.",es:"patrón",defEs:"Algo que pasa una y otra vez de la misma manera.",ex:"Doctors noticed a pattern: more screen time, less sleep."},
+  "checkups":{pos:"noun (plural)",def:"Regular visits to a doctor to make sure you are healthy.",es:"chequeos médicos / revisiones",defEs:"Visitas regulares al médico para asegurarse de que estás sano.",ex:"At my checkup, the doctor asked how many hours I sleep."},
+  "protected":{pos:"verb (past participle)",def:"Kept safe from harm.",es:"protegido",defEs:"Mantenido a salvo del daño.",ex:"Your attention can be protected if you put the phone away."},
+  "distance":{pos:"noun",def:"The amount of space between two things.",es:"distancia",defEs:"El espacio que hay entre dos cosas.",ex:"Keep some distance between you and your phone while you study."},
+  "adopted":{pos:"verb (past)",def:"Started to use a new rule or idea.",es:"adoptaron / adoptado",defEs:"Empezar a usar una regla o idea nueva.",ex:"Our school adopted a no-phone rule this year."},
+  "discipline referrals":{pos:"noun phrase",def:"Official reports sent to the office when a student breaks a rule.",es:"reportes disciplinarios / referidos a la oficina",defEs:"Reportes oficiales que se envían a la oficina cuando un estudiante rompe una regla.",ex:"Fewer discipline referrals means fewer students sent to the office."},
+  "awareness":{pos:"noun",def:"Knowing and understanding that something is happening.",es:"conciencia",defEs:"Saber y entender que algo está pasando.",ex:"Awareness of the problem is the first step to fixing it."},
+  "valuable":{pos:"adjective",def:"Worth a lot of money, or very important.",es:"valioso",defEs:"Que vale mucho dinero, o que es muy importante.",ex:"Your time is valuable, so use it well."}
+};
+
+const bi = (en, es) => en + '<span class="es" lang="es">' + es + '</span>';
+const synth = window.speechSynthesis;
+const paras = [...document.querySelectorAll('.para')];
+const texts = paras.map(p => p.querySelector('p').textContent.replace(/\s+/g,' ').trim());
+const status = document.getElementById('status');
+const playAll = document.getElementById('playAll'), pauseBtn = document.getElementById('pauseBtn'), stopBtn = document.getElementById('stopBtn');
+const rateSel = document.getElementById('rate'), voiceSel = document.getElementById('voice');
+let queue = [], current = -1, paused = false, voices = [];
+let sentIdx = 0, run = 0, playingAll = false, pendingJot = null;
+
+/* Wrap each sentence in a span so it can be highlighted as it is read */
+function wrapSentences(p){
+  const nodes = [...p.childNodes]; p.innerHTML = '';
+  let span = document.createElement('span'); span.className = 's';
+  const flush = () => { if(span.childNodes.length) p.appendChild(span); span = document.createElement('span'); span.className = 's'; };
+  nodes.forEach(node => {
+    if(node.nodeType === 3){
+      const text = node.nodeValue, re = /[.!?]["”]?\s+/g; let last = 0, m;
+      while((m = re.exec(text))){ span.appendChild(document.createTextNode(text.slice(last, m.index + m[0].length))); flush(); last = m.index + m[0].length; }
+      if(last < text.length) span.appendChild(document.createTextNode(text.slice(last)));
+    } else span.appendChild(node);
+  });
+  flush();
+}
+paras.forEach(p => wrapSentences(p.querySelector('p')));
+const sents = paras.map(p => [...p.querySelectorAll('.s')]);
+const JOT_AFTER = new Set([1, 3, 5]);
+function markSentence(sp){ document.querySelectorAll('.s.now').forEach(x => x.classList.remove('now')); if(sp) sp.classList.add('now'); }
+
+if (!synth) { document.getElementById('nosupport').style.display='block'; playAll.disabled = true; }
+
+function loadVoices(){
+  if(!synth) return;
+  voices = synth.getVoices().filter(v => v.lang.toLowerCase().startsWith('en'));
+  if(!voices.length) voices = synth.getVoices();
+  voiceSel.innerHTML = '';
+  voices.forEach((v,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=v.name.replace(/Microsoft |Google /,'').slice(0,28); if(v.default) o.selected=true; voiceSel.appendChild(o); });
+}
+loadVoices(); if(synth) synth.onvoiceschanged = loadVoices;
+
+function makeUtt(text){
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = parseFloat(rateSel.value);
+  const v = voices[voiceSel.value]; if(v) u.voice = v;
+  u.lang = (v && v.lang) || 'en-US';
+  return u;
+}
+function markReading(i){
+  paras.forEach((p,k)=>{ p.classList.toggle('reading', k===i); p.querySelector('.pplay').classList.toggle('on', k===i); });
+  if(i>=0){ const p = paras[i]; const r = p.getBoundingClientRect(); if(r.top<90||r.bottom>window.innerHeight) p.scrollIntoView({behavior:'smooth',block:'center'}); }
+}
+function speakQueue(list, all){
+  if(!synth) return;
+  synth.cancel(); run++; queue = list; paused=false; playingAll = !!all; pendingJot = null;
+  document.querySelectorAll('.jot.now').forEach(j => { j.classList.remove('now'); j.querySelector('.jot-go').hidden = true; });
+  pauseBtn.disabled=false; stopBtn.disabled=false; pauseBtn.textContent='⏸ Pause'; playAll.disabled=true;
+  current = queue.shift(); sentIdx = 0; markReading(current);
+  next();
+}
+function next(){
+  if(sentIdx >= sents[current].length){
+    markSentence(null);
+    if(playingAll && JOT_AFTER.has(current)){
+      const jot = document.querySelector(`.jot[data-after="${current}"]`);
+      pendingJot = jot; jot.classList.add('now'); jot.querySelector('.jot-go').hidden = false;
+      jot.scrollIntoView({behavior:'smooth', block:'center'}); jot.querySelector('.jot-text').focus({preventScroll:true});
+      markReading(-1); pauseBtn.disabled = true;
+      status.innerHTML = queue.length ? bi('Stop and jot. Write your sentence, then press Continue reading.','Para y anota. Escribe tu oración y luego pulsa Seguir leyendo.') : bi('Stop and jot. Write your last sentence, then press Done.','Para y anota. Escribe tu última oración y luego pulsa Listo.');
+      return;
+    }
+    if(!queue.length){ finish(); return; }
+    current = queue.shift(); sentIdx = 0; markReading(current);
+  }
+  status.textContent = `Reading paragraph ${current+1} of 6…`;
+  const sp = sents[current][sentIdx], myRun = run;
+  markSentence(sp);
+  const u = makeUtt(sp.textContent.trim());
+  u.onend = () => { if(myRun !== run) return; sentIdx++; next(); };
+  u.onerror = (e) => { if(myRun !== run) return; if(e.error!=='interrupted' && e.error!=='canceled'){ status.textContent='Audio stopped. Press Listen to try again.'; finish(); } };
+  synth.speak(u);
+}
+function finish(){
+  markReading(-1); markSentence(null); current=-1; queue=[]; pendingJot = null; playingAll = false;
+  pauseBtn.disabled=true; stopBtn.disabled=true; playAll.disabled=false; paused=false; pauseBtn.textContent='⏸ Pause';
+  if(status.textContent.startsWith('Reading')) status.textContent='Finished. Press Listen to hear it again.';
+}
+document.querySelectorAll('.jot-go').forEach(b => b.onclick = () => {
+  const jot = b.closest('.jot'); if(jot !== pendingJot) return;
+  jot.classList.remove('now'); b.hidden = true; pendingJot = null;
+  if(!queue.length){ status.textContent = 'Finished. Now set up your vocabulary notebook and go on to the activities below.'; finish(); return; }
+  current = queue.shift(); sentIdx = 0; markReading(current); pauseBtn.disabled = false; next();
+});
+playAll.onclick = () => speakQueue([0,1,2,3,4,5], true);
+paras.forEach((p,i)=> p.querySelector('.pplay').onclick = () => speakQueue([i], false));
+pauseBtn.onclick = () => {
+  if(!synth) return;
+  if(paused){ synth.resume(); paused=false; pauseBtn.textContent='⏸ Pause'; status.textContent=`Reading paragraph ${current+1} of 6…`; }
+  else { synth.pause(); paused=true; pauseBtn.textContent='▶ Resume'; status.textContent='Paused.'; }
+};
+stopBtn.onclick = () => { queue=[]; run++; if(synth) synth.cancel(); document.querySelectorAll('.jot.now').forEach(j => { j.classList.remove('now'); j.querySelector('.jot-go').hidden = true; }); status.textContent='Stopped.'; finish(); };
+rateSel.onchange = voiceSel.onchange = () => { if(current>=0 && !pendingJot){ const rest=[current,...queue], all = playingAll, si = sentIdx; speakQueue(rest, all); sentIdx = si; } };
+
+/* Vocabulary card */
+const card=document.getElementById('card'); let openBtn=null, cur=null;
+function showWord(w, btn){
+  const d = VOCAB[w]; if(!d) return;
+  cur = w;
+  document.getElementById('cWord').textContent = w;
+  document.getElementById('cPos').textContent = d.pos;
+  document.getElementById('cDef').textContent = d.def;
+  document.getElementById('cEs').innerHTML = 'En español: <b></b><span class="es"></span>'; document.querySelector('#cEs b').textContent = d.es; document.querySelector('#cEs .es').textContent = d.defEs;
+  document.getElementById('cEx').textContent = '“' + d.ex + '”';
+  if(openBtn) openBtn.classList.remove('open');
+  openBtn = btn; if(btn && btn.classList.contains('v')) btn.classList.add('open');
+  card.classList.add('show');
+}
+function hideCard(){ card.classList.remove('show'); if(openBtn) openBtn.classList.remove('open'); openBtn=null; }
+document.querySelectorAll('.passage .v').forEach(b => b.onclick = () => showWord(b.dataset.w, b));
+document.getElementById('cClose').onclick = hideCard;
+document.addEventListener('keydown', e => { if(e.key==='Escape') hideCard(); });
+function sayOnce(text){ if(!synth) return; if(current>=0){ queue=[]; run++; synth.cancel(); finish(); } const u=makeUtt(text); u.rate=Math.min(u.rate,0.9); synth.speak(u); }
+document.getElementById('cSay').onclick = () => cur && sayOnce(cur);
+document.getElementById('cSayEx').onclick = () => cur && sayOnce(VOCAB[cur].ex);
+
+/* Bell ringer */
+document.querySelectorAll('#bell .ad').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => {
+  g.querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on');
+  const n = document.querySelectorAll('#bell .ad .on').length;
+  document.getElementById('bellNote').innerHTML = n < 4 ? bi(`${n} of 4 answered. Write a sentence in your notebook for each choice as you go.`,`${n} de 4 respondidas. Escribe una oración en tu cuaderno por cada respuesta.`) : bi('All four answered. Now finish your four sentences in your notebook and pick one to read to the class. After reading the passage, come back and see if you would change any answer.','Las cuatro respondidas. Termina tus cuatro oraciones en tu cuaderno y elige una para leer a la clase. Después de leer el texto, vuelve y mira si cambiarías alguna respuesta.');
+}));
+const fmt = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+function makeTimer(textId, btnId, total){
+  let left = total, id = null;
+  const txt = document.getElementById(textId), btn = document.getElementById(btnId);
+  btn.onclick = () => {
+    if(id){ clearInterval(id); id = null; btn.textContent = 'Resume'; return; }
+    if(left <= 0){ left = total; txt.classList.remove('done'); txt.textContent = fmt(left); }
+    btn.textContent = 'Pause';
+    id = setInterval(() => {
+      left--; txt.textContent = fmt(left);
+      if(left <= 0){ clearInterval(id); id = null; txt.textContent = 'Time!'; txt.classList.add('done'); btn.textContent = 'Restart'; }
+    }, 1000);
+  };
+}
+makeTimer('timerText', 'timerBtn', 600);
+makeTimer('timer2Text', 'timer2Btn', 900);
+makeTimer('timer3Text', 'timer3Btn', 1800);
+makeTimer('timer6Text', 'timer6Btn', 1200);
+
+/* Sketchpad */
+(function(){
+  const c = document.getElementById('pad'), ctx = c.getContext('2d');
+  let color = '#1f1b16', size = 6, eraser = false, drawing = false, last = null;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const pos = e => { const r = c.getBoundingClientRect(); return { x:(e.clientX - r.left) * c.width / r.width, y:(e.clientY - r.top) * c.height / r.height }; };
+  c.addEventListener('pointerdown', e => { drawing = true; last = pos(e); c.setPointerCapture(e.pointerId); e.preventDefault(); });
+  c.addEventListener('pointermove', e => {
+    if(!drawing) return; const p = pos(e);
+    ctx.strokeStyle = eraser ? '#fff' : color; ctx.lineWidth = eraser ? size * 3 : size;
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p;
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev => c.addEventListener(ev, () => { drawing = false; }));
+  document.querySelectorAll('.sw').forEach(b => b.onclick = () => { document.querySelectorAll('.sw').forEach(x => x.classList.remove('on')); b.classList.add('on'); color = b.dataset.c; eraser = false; document.getElementById('padEraser').classList.remove('on'); });
+  document.getElementById('padSize').onchange = e => size = parseInt(e.target.value, 10);
+  document.getElementById('padEraser').onclick = e => { eraser = !eraser; e.target.classList.toggle('on', eraser); };
+  document.getElementById('padClear').onclick = () => ctx.clearRect(0, 0, c.width, c.height);
+})();
+
+/* Fake feed: infinite scroll + notification badge + variable reward */
+(function(){
+  const feed = document.getElementById('feed'), badge = document.getElementById('badge'), msgTab = document.getElementById('msgTab');
+  const tText = document.getElementById('feedTimer'), startBtn = document.getElementById('feedStart');
+  const boring = ["posted a photo of their lunch.","shared a weather update. It is cloudy.","liked a post about socks.","is watching a video of a parking lot.","changed their profile picture. Again.","posted: \"Monday.\"","shared a recipe for toast.","is at the grocery store.","posted a blurry picture of the sky.","commented \"nice\" on a post.","shared a 12-minute video about tape.","posted a selfie with no caption."];
+  const rewards = ["🎉 posted the funniest video you have seen all week.","🔥 Your post just got 200 likes!","😂 a cat fell off a table and landed in a box of cereal.","🏆 Your team won. Final score in the video.","💬 someone famous replied to your comment!","🎁 FREE pizza at lunch tomorrow, says the office."];
+  const names = ["Marisol","Jaylen","Destiny","Carlos","Aaliyah","Brayden","Keisha","Diego","Tyler","Valeria"];
+  let running = false, left = 60, tId = null, posts = 0, rewardsShown = 0, badgeClicks = 0, scrolls = 0, badgeN = 0, badgeTimer = null;
+  function addPosts(n){
+    for(let i = 0; i < n; i++){
+      const isReward = Math.random() < 0.15;
+      const d = document.createElement('div'); d.className = 'post' + (isReward ? ' reward' : '');
+      const who = names[Math.floor(Math.random() * names.length)];
+      d.innerHTML = `<div class="who"><span class="av"></span><b>${who}</b> · ${Math.floor(Math.random()*59)+1}m</div><div>${isReward ? who + ' ' + rewards[Math.floor(Math.random()*rewards.length)] : who + ' ' + boring[Math.floor(Math.random()*boring.length)]}</div><div class="pic"></div><div class="likes">♡ ${isReward ? Math.floor(Math.random()*900)+300 : Math.floor(Math.random()*9)} likes</div>`;
+      feed.appendChild(d); posts++; if(isReward) rewardsShown++;
+    }
+  }
+  addPosts(6);
+  feed.addEventListener('scroll', () => {
+    if(running) scrolls++;
+    if(feed.scrollTop + feed.clientHeight > feed.scrollHeight - 200) addPosts(4);   // the feed never ends
+  });
+  msgTab.onclick = () => { if(running) badgeClicks++; badge.hidden = true; badgeN = 0; msgTab.classList.add('on'); setTimeout(() => msgTab.classList.remove('on'), 400); };
+  function pingBadge(){ if(!running) return; badgeN++; badge.textContent = badgeN; badge.hidden = false; badgeTimer = setTimeout(pingBadge, 4000 + Math.random() * 7000); }
+  function endRun(){
+    running = false; clearInterval(tId); clearTimeout(badgeTimer); tText.textContent = 'Time!'; tText.classList.add('done'); startBtn.textContent = 'Try again';
+    const seen = Math.min(posts, Math.round((feed.scrollTop + feed.clientHeight) / 150));
+    document.getElementById('feedStats').innerHTML = [
+      `<li>${bi(`<b>Infinite scroll:</b> you scrolled past about <b>${seen}</b> posts, and the feed kept making more. It has no end.`,`<b>Scroll infinito:</b> pasaste unas <b>${seen}</b> publicaciones y el feed siguió creando más. No tiene final.`)}</li>`,
+      `<li>${bi(`<b>Notification:</b> the red badge appeared <b>${badgeN + badgeClicks}</b> time${badgeN + badgeClicks === 1 ? '' : 's'}. You tapped it <b>${badgeClicks}</b> time${badgeClicks === 1 ? '' : 's'}. (There were never any real messages.)`,`<b>Notificación:</b> el círculo rojo apareció <b>${badgeN + badgeClicks}</b> ${badgeN + badgeClicks === 1 ? 'vez' : 'veces'}. Lo tocaste <b>${badgeClicks}</b> ${badgeClicks === 1 ? 'vez' : 'veces'}. (Nunca hubo mensajes reales.)`)}</li>`,
+      `<li>${bi(`<b>Variable reward:</b> only <b>${rewardsShown}</b> of ${posts} posts were “good” ones. You could not predict which, so you kept scrolling to find the next one.`,`<b>Recompensa variable:</b> solo <b>${rewardsShown}</b> de ${posts} publicaciones eran «buenas». No podías predecir cuáles, así que seguiste deslizando para encontrar la siguiente.`)}</li>`
+    ].join('');
+    document.getElementById('feedResults').hidden = false;
+    document.getElementById('feedResults').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  startBtn.onclick = () => {
+    if(running) return;
+    running = true; left = 60; posts = 0; rewardsShown = 0; badgeClicks = 0; scrolls = 0; badgeN = 0;
+    feed.innerHTML = ''; addPosts(6); feed.scrollTop = 0; badge.hidden = true;
+    tText.classList.remove('done'); tText.textContent = '1:00'; startBtn.textContent = 'Scrolling…';
+    document.getElementById('feedResults').hidden = true;
+    badgeTimer = setTimeout(pingBadge, 3000);
+    tId = setInterval(() => { left--; tText.textContent = `0:${String(left).padStart(2,'0')}`; if(left <= 0) endRun(); }, 1000);
+  };
+  document.querySelectorAll('#trickPoll button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#trickPoll button').forEach(x => x.classList.remove('picked')); b.classList.add('picked');
+    document.getElementById('trickNote').innerHTML = bi(`You chose <b>${b.dataset.v}</b>. In your notebook: <i>“The trick that caught me was ${b.dataset.v} because ___.”</i> Look for this exact term in paragraph 2.`,`Elegiste <b>${b.dataset.v}</b>. En tu cuaderno: «The trick that caught me was ${b.dataset.v} because ___». Busca este término exacto en el párrafo 2.`);
+  });
+})();
+
+/* Attention check: off-tab and idle warnings */
+(function(){
+  const IDLE_MS = 3 * 60 * 1000;          // 3 minutes with no activity
+  const overlay = document.getElementById('focusOverlay'), title = document.getElementById('focusTitle'), msg = document.getElementById('focusMsg'), stat = document.getElementById('focusStat');
+  const baseTitle = document.title;
+  let awayCount = 0, idleCount = 0, idleTimer = null, hiddenAt = null, titleFlash = null, shown = false;
+  const TEACHER_CODE = '1103';            // teacher unlock code
+  const codeIn = document.getElementById('focusCode'), err = document.getElementById('focusErr');
+  let tries = 0;
+  const nudges = [
+    'Remember paragraph 1: every minute away is a minute someone else is paid for. Come back and finish strong.',
+    'The app is built to hold you. You are built to choose. Choose the lesson.',
+    'Paragraph 3 says it takes 20 minutes to fully return to a task. Let\'s not lose that time.',
+    'Distance, notifications off, a timer, awareness. Pick one and use it right now.'
+  ];
+  const nudgesEs = [
+    'Recuerda el párrafo 1: cada minuto fuera es un minuto que alguien más paga. Vuelve y termina con fuerza.',
+    'La app está hecha para retenerte. Tú estás hecho para elegir. Elige la lección.',
+    'El párrafo 3 dice que se necesitan 20 minutos para volver por completo a una tarea. No perdamos ese tiempo.',
+    'Distancia, notificaciones apagadas, un temporizador, conciencia. Elige una y úsala ahora mismo.'
+  ];
+  const extraEs = e => e.replace('You clicked into another window.','Hiciste clic en otra ventana.').replace(/You were gone about (\d+) seconds\./,'Estuviste fuera unos $1 segundos.').replace(/You were gone about (\d+) minutes?\./,'Estuviste fuera unos $1 minutos.');
+  function show(kind, extra){
+    if(shown) return; shown = true;
+    const k = (awayCount + idleCount) % nudges.length;
+    title.textContent = kind === 'away' ? 'You left the lesson.' : 'Still there?';
+    document.getElementById('focusTitleEs').textContent = kind === 'away' ? 'Saliste de la lección.' : '¿Sigues ahí?';
+    msg.textContent = (kind === 'idle' ? 'Nothing has happened on this page for 3 minutes. ' : '') + nudges[k] + (extra ? ' ' + extra : '');
+    document.getElementById('focusMsgEs').textContent = (kind === 'idle' ? 'No ha pasado nada en esta página durante 3 minutos. ' : '') + nudgesEs[k] + (extra ? ' ' + extraEs(extra) : '');
+    stat.textContent = `Times off this tab: ${awayCount} · Idle warnings: ${idleCount} · Veces fuera: ${awayCount} · Avisos de inactividad: ${idleCount}`;
+    overlay.hidden = false; codeIn.focus();
+    if(synth && current >= 0 && !paused){ synth.pause(); paused = true; pauseBtn.textContent = '▶ Resume'; status.textContent = 'Paused for attention check.'; }
+  }
+  function hide(){ overlay.hidden = true; shown = false; codeIn.value = ''; err.textContent = ''; tries = 0; resetIdle(); }
+  document.getElementById('focusForm').onsubmit = e => {
+    e.preventDefault();
+    if(codeIn.value.trim().toUpperCase() === TEACHER_CODE){ hide(); return; }
+    tries++; codeIn.value = ''; codeIn.classList.remove('shake'); void codeIn.offsetWidth; codeIn.classList.add('shake');
+    err.innerHTML = tries >= 3 ? bi('That is not the code. Only your teacher can unlock this screen. Keep your hand up.','Ese no es el código. Solo tu maestro puede desbloquear esta pantalla. Mantén la mano levantada.') : bi('That is not the code. Raise your hand for your teacher.','Ese no es el código. Levanta la mano para llamar a tu maestro.');
+    codeIn.focus();
+  };
+  function resetIdle(){
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => { if(document.visibilityState === 'visible'){ idleCount++; show('idle'); } }, IDLE_MS);
+  }
+  ['pointerdown','keydown','scroll','touchstart','input'].forEach(ev => document.addEventListener(ev, () => { if(!shown) resetIdle(); }, {passive:true}));
+  document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'hidden'){
+      hiddenAt = Date.now(); awayCount++;
+      let on = false; titleFlash = setInterval(() => { document.title = (on = !on) ? '👀 Come back to the lesson' : baseTitle; }, 900);
+    } else {
+      clearInterval(titleFlash); document.title = baseTitle;
+      const secs = hiddenAt ? Math.round((Date.now() - hiddenAt) / 1000) : 0; hiddenAt = null;
+      show('away', secs >= 5 ? `You were gone about ${secs < 60 ? secs + ' seconds' : Math.round(secs/60) + ' minute' + (Math.round(secs/60) === 1 ? '' : 's')}.` : '');
+    }
+  });
+  window.addEventListener('blur', () => { if(document.visibilityState === 'visible' && !shown){ setTimeout(() => { if(!document.hasFocus() && document.visibilityState === 'visible'){ awayCount++; show('away', 'You clicked into another window.'); } }, 1500); } });
+  resetIdle();
+})();
+
+
+/* Bilingual: append Spanish under English for static text */
+(function(){
+  const ES = {
+"h1": [
+"Tu atención está a la venta"
+],
+".howto": [
+"Pulsa <strong>Escuchar todo</strong> para oír el texto completo, o el botón redondo junto a un párrafo para oír solo esa parte. Toca cualquier palabra azul para ver su significado."
+],
+".today-eq .eyebrow": [
+"Pregunta esencial"
+],
+".today-eq .eq-q": [
+"¿Quién controla tu atención y cómo puedes recuperarla?"
+],
+".today-obj .eyebrow": [
+"Hoy puedo…"
+],
+".today-obj li": [
+"<b>Leer y escuchar:</b> encontrar la idea central del texto y dos detalles que la apoyan.",
+"<b>Hablar:</b> explicar una herramienta que usan las apps para retener la atención, con el marco «Una herramienta que usan los diseñadores es ___. Funciona así: ___».",
+"<b>Escribir:</b> responder la pregunta esencial en 3–5 oraciones usando al menos tres palabras de vocabulario."
+],
+".bell > .bell-head .eyebrow": [
+"Actividad de inicio · 25 minutos · Parte 1 · 10 minutos"
+],
+".bell > .bell-head .bell-title": [
+"¿De acuerdo o en desacuerdo?"
+],
+".bell > .bell-dir": [
+"<b>Paso 1:</b> Lee cada afirmación y toca <b>De acuerdo</b> o <b>En desacuerdo</b>.<br><b>Paso 2:</b> En tu cuaderno, escribe una oración por <u>cada</u> una de tus cuatro respuestas con el marco: «Estoy de acuerdo/en desacuerdo con que ___ porque ___».<br><b>Paso 3:</b> Prepárate para leer una de tus oraciones a la clase."
+],
+".bell-list li > span": [
+"Las apps gratis son realmente gratis.",
+"Yo decido cuándo dejo de deslizar, no la app.",
+"Un teléfono sobre el escritorio, boca abajo y en silencio, no afecta mi concentración.",
+"Las escuelas no deberían permitir teléfonos en clase."
+],
+".ad button[data-v=\"agree\"]": [
+"De acuerdo",
+"De acuerdo",
+"De acuerdo",
+"De acuerdo"
+],
+".ad button[data-v=\"disagree\"]": [
+"En desacuerdo",
+"En desacuerdo",
+"En desacuerdo",
+"En desacuerdo"
+],
+"#bellNote": [
+"Ejemplo: «Estoy en desacuerdo con que las apps gratis sean realmente gratis porque ganan dinero con anuncios». Después de leer, vuelve y mira si cambiarías alguna respuesta."
+],
+".draw .eyebrow": [
+"Parte 2 · Dibújalo · 15 minutos"
+],
+".draw .bell-title": [
+"Dibuja lo que te roba la atención"
+],
+".draw .bell-dir": [
+"<b>Paso 1:</b> Dibuja un momento en que tu teléfono te alejó de algo (la tarea, una conversación, el sueño). Usa el bloc de dibujo o tu cuaderno.<br><b>Paso 2:</b> Pon <u>tres palabras</u> en tu dibujo. Intenta usar palabras de la caja: notification, scrolling, attention, screen, interruption, distance.<br><b>Paso 3:</b> Debajo del dibujo, escribe una oración: «En mi dibujo, ___ me quita la atención porque ___»."
+],
+".pad-tools > .ctrl": [
+"Color"
+],
+"#padEraser": [
+"Borrador"
+],
+"#padClear": [
+"Limpiar"
+],
+".draw .bell-note": [
+"Tu dibujo se queda solo en esta pantalla. Muéstralo o descríbelo a un compañero; si tu maestro quiere una copia, toma una captura de pantalla."
+],
+".hook .eyebrow": [
+"Gancho · Antes de leer · 30 minutos"
+],
+".hook-q": [
+"Toma tu teléfono ahora mismo. ¿Cuántas veces lo has desbloqueado hoy?"
+],
+"#poll button[data-v=\"more than 60\"]": [
+"Más de 60"
+],
+"#hookNote": [
+"Toca un número. Luego habla con un compañero: <em>¿Quién decidió cuántas veces lo revisaste: tú o el teléfono?</em>"
+],
+".feedlab .eyebrow": [
+"Siente los trucos · 60 segundos"
+],
+".feedlab .bell-title": [
+"Desliza este feed falso. Te diremos qué te hizo."
+],
+".feedlab .bell-dir": [
+"Pulsa Empezar y desliza el feed como lo harías normalmente hasta que termine el tiempo. Toca lo que quieras."
+],
+"#feedResults .eyebrow": [
+"Qué acaba de pasar"
+],
+"#feedResults .item-q": [
+"<b>¿Qué truco te atrapó más?</b>"
+],
+"#trickPoll button": [
+"Scroll infinito · el feed nunca terminó",
+"Notificación · el círculo rojo me jaló",
+"Recompensa variable · seguí buscando una buena publicación"
+],
+"#trickNote": [
+"En tu cuaderno: «El truco que me atrapó fue ___ porque ___». Leerás sobre los tres trucos en el párrafo 2."
+],
+".frame-box .eyebrow": [
+"Objetivos (completos)",
+"Estándares"
+],
+".frame-box .obj-label": [
+"Contenido (ELA)",
+"Lenguaje (ELP)",
+"CCRS de Misisipi para ELA (grados 9–10)",
+"Estándares ELP (ELPA21, grados 9–12)"
+],
+"#playAll": [
+"Escuchar todo"
+],
+"#pauseBtn": [
+"Pausa"
+],
+"#stopBtn": [
+"Parar"
+],
+".player label.ctrl": [
+"Velocidad",
+"Voz"
+],
+"#status": [
+"Listo. Seis párrafos, unos cuatro minutos."
+],
+".jot .eyebrow": [
+"Para y anota · después de los párrafos 1–2",
+"Para y anota · después de los párrafos 3–4",
+"Para y anota · después de los párrafos 5–6"
+],
+".jot-go": [
+"Seguir leyendo ▶",
+"Seguir leyendo ▶",
+"Listo ✓"
+],
+".jot > p": [
+"En una oración: <b>¿Cómo ganan dinero las apps gratis y por qué es un problema?</b>",
+"En una oración: <b>¿Qué descubrieron los investigadores sobre los teléfonos en el escritorio?</b>",
+"En una oración: <b>¿Qué solución funcionaría mejor para ti y por qué?</b>"
+],
+".appdesign .bell-title": [
+"Crea una app que respete tu atención"
+],
+".appdesign .bell-dir": [
+"Las apps del texto están diseñadas para <b>retenerte</b>. Tu tarea: diseña una que esté diseñada para <b>dejarte ir</b>. Llena el plan; la pantalla del teléfono se construye sola mientras escribes. Luego copia tu plan en tu cuaderno y prepárate para presentarlo en 30 segundos."
+],
+".ad-l": [
+"Nombre de la app",
+"¿Para qué sirve? (una oración)",
+"Ícono",
+"¿Qué trucos se <u>negará</u> a usar tu app? (toca todos los que apliquen)",
+"¿Cómo le da tu app <b>un final</b> al feed?",
+"¿Cómo gana dinero tu app <b>sin</b> vender atención?"
+],
+"#adRefuse button": [
+"Sin scroll infinito",
+"Sin círculos rojos",
+"Sin recompensas variables",
+"Sin reproducción automática"
+],
+".appdesign .item-ext": [
+"<b>Preséntala (30 segundos):</b> «Mi app se llama ___. Sirve para ___. Se niega a usar ___ porque ___. En lugar de vender tu atención, ___»."
+],
+".notebook .eyebrow": [
+"Cuaderno de vocabulario"
+],
+".notebook .item-q": [
+"Mientras lees, toca cada palabra azul y cópiala en tu cuaderno con su significado <b>en tus propias palabras</b>. Organiza tu página así:"
+],
+".nb-ex:not(.nb-row) span": [
+"Palabra",
+"Mi definición"
+],
+".notebook .item-ext": [
+"Meta: al menos <b>10 palabras</b> antes de empezar las preguntas de abajo. Puedes escribir la palabra en español junto a la palabra en inglés si te ayuda a recordar."
+],
+".vmatch .eyebrow": [
+"Palabras",
+"Significados"
+],
+"#vmShuffle": [
+"Nuevo grupo de palabras"
+],
+"#vmSpeed": [
+"Ronda rápida de 60 segundos"
+],
+".vmatch .item-ext": [
+"<b>Úsalo:</b> En tu cuaderno, escribe tres oraciones sobre tus propios hábitos con el teléfono. Usa una palabra de vocabulario en cada oración y subráyala. Ejemplo: «Apagué todas las <u>notifications</u> excepto los mensajes de mi mamá»."
+],
+"#checkQ3": [
+"Revisar respuestas"
+],
+"#listenQ5": [
+"Reproducir el párrafo"
+],
+".score label.ctrl": [
+"Nombre"
+],
+".exit > .eyebrow": [
+"Pregunta esencial"
+],
+".exit .eq-q": [
+"¿Quién controla tu atención y cómo puedes recuperarla?"
+],
+".exit .item-dir": [
+"Escribe <b>una oración por cada letra</b> de <b>O·R·E·A·C</b>. Usa al menos <b>tres palabras de vocabulario</b> del texto. Tus cinco oraciones se convierten en un párrafo al final."
+],
+".oreac-body b": [
+"Opinión",
+"Razón",
+"Evidencia",
+"Análisis",
+"Conclusión"
+],
+"#submitLink": [
+"Enviar mis resultados y mi boleto de salida"
+]
+};
+  Object.entries(ES).forEach(([sel, list]) => {
+    const els = document.querySelectorAll(sel);
+    list.forEach((html, i) => { const el = els[i]; if(!el || !html) return; const sp = document.createElement('span'); sp.className = 'es'; sp.lang = 'es'; sp.innerHTML = html; el.appendChild(sp); });
+  });
+  document.querySelectorAll('.es-toggle').forEach(b => b.onclick = () => { const box = b.nextElementSibling; const open = !box.classList.contains('open'); box.classList.toggle('open', open); b.setAttribute('aria-expanded', open); b.textContent = open ? 'Ocultar español ▴' : 'Ver en español ▾'; });
+  const btn = document.getElementById('langBtn');
+  btn.onclick = () => { const off = document.body.classList.toggle('no-es'); btn.textContent = off ? 'Español: OFF' : 'Español: ON'; btn.setAttribute('aria-pressed', !off); };
+})();
+
+/* Hook poll */
+document.querySelectorAll('#poll button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#poll button').forEach(x => x.classList.remove('picked'));
+  b.classList.add('picked');
+  document.getElementById('hookNote').innerHTML = bi(`You picked <b>${b.dataset.v}</b>. Teens average about 100 unlocks a day. Talk with a partner: <em>Who decided how many times you checked it: you, or the phone?</em>`,`Elegiste <b>${b.dataset.v}</b>. Los adolescentes desbloquean el teléfono unas 100 veces al día. Habla con un compañero: <em>¿Quién decidió cuántas veces lo revisaste: tú o el teléfono?</em>`);
+});
+
+/* Practice item */
+const FB = {
+  A:bi("Not quite. Look at the last bar: 7.1 hours is the smallest number, so those teens sleep the least.","No exactamente. Mira la última barra: 7.1 horas es el número más pequeño, así que esos adolescentes duermen menos."),
+  B:bi("Correct! Each bar gets shorter as screen time grows, and paragraph 4 says teens with more screen time report less sleep.","¡Correcto! Cada barra es más corta a medida que crece el tiempo de pantalla, y el párrafo 4 dice que los adolescentes con más tiempo de pantalla duermen menos."),
+  C:bi("Not quite. Paragraph 4 says the connection does not prove that screens cause anxiety, and this graph is about sleep.","No exactamente. El párrafo 4 dice que la conexión no prueba que las pantallas causen ansiedad, y esta gráfica es sobre el sueño."),
+  D:bi("Not quite. The bars are different heights, so the groups do not all sleep the same amount.","No exactamente. Las barras tienen alturas diferentes, así que los grupos no duermen lo mismo.")
+};
+document.querySelectorAll('#choices button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#choices button').forEach(x => x.classList.remove('correct','wrong'));
+  b.classList.add(b.dataset.ok ? 'correct' : 'wrong');
+  document.getElementById('feedback').innerHTML = FB[b.dataset.k];
+});
+
+/* Vocabulary matching with streak counter and speed round */
+(function(){
+  const wordsEl = document.getElementById('vmWords'), defsEl = document.getElementById('vmDefs'), st = document.getElementById('vmStatus');
+  const streakEl = document.getElementById('vmStreak'), bestEl = document.getElementById('vmBest'), speedPill = document.getElementById('vmSpeedPill'), speedBtn = document.getElementById('vmSpeed');
+  const all = Object.keys(VOCAB);
+  let selWord = null, matched = 0, streak = 0, best = 0, speed = false, speedLeft = 60, speedHits = 0, speedId = null;
+  const shuffle = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
+  function showStreak(){
+    streakEl.textContent = `🔥 Streak: ${streak}`; streakEl.classList.toggle('ok', streak >= 3);
+    bestEl.textContent = `Best streak: ${best}`;
+  }
+  function build(){
+    const set = shuffle(all).slice(0, 8); matched = 0; selWord = null;
+    wordsEl.innerHTML = '<div class="eyebrow">Words</div>'; defsEl.innerHTML = '<div class="eyebrow">Meanings</div>';
+    set.forEach(w => { const b = document.createElement('button'); b.textContent = w; b.dataset.w = w; wordsEl.appendChild(b); });
+    shuffle(set).forEach(w => { const b = document.createElement('button'); b.textContent = VOCAB[w].def.replace(/\s*\(.*\)$/, ''); b.dataset.w = w; defsEl.appendChild(b); });
+    if(!speed) st.textContent = '0 of 8 matched.';
+    wordsEl.querySelectorAll('button').forEach(b => b.onclick = () => {
+      if(b.classList.contains('hit')) return;
+      wordsEl.querySelectorAll('button').forEach(x => x.classList.remove('sel')); b.classList.add('sel'); selWord = b;
+      st.textContent = `Now tap the meaning of “${b.dataset.w}”.`;
+    });
+    defsEl.querySelectorAll('button').forEach(b => b.onclick = () => {
+      if(b.classList.contains('hit')) return;
+      if(!selWord){ st.textContent = 'Tap a word first.'; return; }
+      if(b.dataset.w === selWord.dataset.w){
+        b.classList.add('hit'); selWord.classList.add('hit'); selWord.classList.remove('sel'); selWord = null; matched++;
+        streak++; if(streak > best) best = streak; showStreak();
+        if(speed){ speedHits++; speedPill.textContent = `⏱ ${fmt(speedLeft)} · ${speedHits} matches`; }
+        const cheer = streak >= 8 ? ' Unstoppable!' : streak >= 5 ? ' On fire!' : streak >= 3 ? ' Keep it going!' : '';
+        if(matched === 8){ if(speed){ build(); st.textContent = `New set!${cheer}`; } else st.textContent = `All eight matched.${cheer} Press “New set of words” for eight more.`; }
+        else st.textContent = `${matched} of 8 matched.${cheer}`;
+      } else {
+        b.classList.add('miss'); selWord.classList.add('miss');
+        streak = 0; showStreak();
+        st.textContent = `Not a match. Streak reset. Tap “${selWord.dataset.w}” in the passage if you need a hint.`;
+        setTimeout(() => { b.classList.remove('miss'); if(selWord) selWord.classList.remove('miss'); wordsEl.querySelectorAll('.miss').forEach(x => x.classList.remove('miss')); }, 900);
+      }
+    });
+  }
+  function endSpeed(){
+    clearInterval(speedId); speed = false; speedBtn.disabled = false; speedBtn.textContent = '⚡ Play speed round again';
+    speedPill.textContent = `⏱ Time! ${speedHits} matches`;
+    st.textContent = `Speed round over: ${speedHits} match${speedHits === 1 ? '' : 'es'} in 60 seconds, best streak ${best}. Can you beat it?`;
+  }
+  speedBtn.onclick = () => {
+    if(speed) return;
+    speed = true; speedLeft = 60; speedHits = 0; streak = 0; showStreak();
+    speedPill.hidden = false; speedPill.textContent = '⏱ 1:00 · 0 matches'; speedBtn.disabled = true; speedBtn.textContent = 'Go!';
+    build(); st.textContent = 'Go! Match as many as you can.';
+    speedId = setInterval(() => { speedLeft--; speedPill.textContent = `⏱ ${fmt(speedLeft)} · ${speedHits} matches`; if(speedLeft <= 0) endSpeed(); }, 1000);
+  };
+  document.getElementById('vmShuffle').onclick = () => { if(speed) return; build(); };
+  showStreak(); build();
+})();
+
+/* App design */
+(function(){
+  makeTimer('timer5Text', 'timer5Btn', 900);
+  const $ = id => document.getElementById(id);
+  const state = { icon:'', refuse:new Set() };
+  function render(){
+    const name = $('adName').value.trim(), purpose = $('adPurpose').value.trim(), end = $('adEnd').value.trim(), money = $('adMoney').value.trim();
+    $('psName').textContent = name || 'Your app';
+    $('psPurpose').textContent = purpose || 'What is it for?';
+    $('psIcon').textContent = state.icon || '📱';
+    $('psEnd').textContent = end ? '✓ ' + end : "✓ You're all caught up.";
+    $('psMoney').textContent = money ? '💵 ' + money : 'How does it make money?';
+    const list = $('psRefuse'); list.innerHTML = '';
+    if(state.refuse.size){ state.refuse.forEach(v => { const s = document.createElement('span'); s.textContent = '🚫 ' + v.replace(/^No /, ''); list.appendChild(s); }); }
+    else { const s = document.createElement('span'); s.className = 'ps-empty'; s.textContent = 'Tap the tricks your app refuses to use.'; list.appendChild(s); }
+    const done = [name, purpose, state.icon, state.refuse.size, end, money].filter(Boolean).length;
+    $('adStatus').innerHTML = done === 6 ? bi('All 6 parts done. Copy your plan into your notebook and practice your 30-second pitch.','Las 6 partes listas. Copia tu plan en tu cuaderno y practica tu presentación de 30 segundos.') : bi(`${done} of 6 parts done.`,`${done} de 6 partes listas.`);
+  }
+  ['adName','adPurpose','adEnd','adMoney'].forEach(id => $(id).addEventListener('input', render));
+  document.querySelectorAll('#adIcons button').forEach(b => b.onclick = () => { document.querySelectorAll('#adIcons button').forEach(x => x.classList.remove('picked')); b.classList.add('picked'); state.icon = b.dataset.v; render(); });
+  document.querySelectorAll('#adRefuse button').forEach(b => b.onclick = () => { b.classList.toggle('picked'); if(b.classList.contains('picked')) state.refuse.add(b.dataset.v); else state.refuse.delete(b.dataset.v); render(); });
+  render();
+})();
+
+
+/* Item 2: single choice */
+const FB2 = {
+  A:bi("Not quite. The text says the phone did not have to ring, so the sound is not the point.","No exactamente. El texto dice que el teléfono no tenía que sonar, así que el sonido no es el punto."),
+  B:bi("Not quite. That is a present (a gift). Presence means being in a place.","No exactamente. Eso es un «present» (un regalo). «Presence» significa estar en un lugar."),
+  C:bi("Correct! Presence means the phone was there. Just being on the desk was a distraction.","¡Correcto! «Presence» significa que el teléfono estaba ahí. Solo estar en el escritorio ya era una distracción."),
+  D:bi("Not quite. The memory test is what the students took; presence describes the phone.","No exactamente. La prueba de memoria es lo que hicieron los estudiantes; «presence» describe al teléfono.")
+};
+const q2 = document.querySelector('[data-item="q2"]'), fb2 = document.querySelector('[data-fb="q2"]');
+q2.querySelectorAll('button').forEach(b => b.onclick = () => {
+  q2.querySelectorAll('button').forEach(x => x.classList.remove('correct','wrong'));
+  b.classList.add(b.dataset.ok ? 'correct' : 'wrong');
+  fb2.innerHTML = FB2[b.dataset.k];
+});
+
+/* Item 3: choose two */
+const q3 = document.querySelector('[data-item="q3"]'), fb3 = document.querySelector('[data-fb="q3"]');
+q3.querySelectorAll('button').forEach(b => b.onclick = () => {
+  q3.querySelectorAll('button').forEach(x => x.classList.remove('correct','wrong'));
+  const picked = q3.querySelectorAll('button.picked');
+  if(b.classList.contains('picked')) b.classList.remove('picked');
+  else if(picked.length < 2) b.classList.add('picked');
+  else { fb3.textContent = 'You already chose two. Tap one of your choices to unselect it first.'; return; }
+  const now = q3.querySelectorAll('button.picked').length;
+  fb3.textContent = `${now} of 2 selected.`;
+  if(now === 2) checkQ3();
+});
+function checkQ3(){
+  const picked = [...q3.querySelectorAll('button.picked')];
+  if(picked.length < 2){ fb3.textContent = 'Choose two answers before checking.'; return; }
+  let right = 0;
+  picked.forEach(b => { if(b.dataset.ok){ b.classList.add('correct'); right++; } else b.classList.add('wrong'); });
+  fb3.innerHTML = right === 2
+    ? bi('Correct! Both details describe tools designers use to keep people in the app (paragraph 2).','¡Correcto! Los dos detalles describen herramientas que usan los diseñadores para mantener a la gente en la app (párrafo 2).')
+    : right === 1
+      ? bi('One is right. The other detail is about the effects or solutions, not about how apps are designed. Look again at paragraph 2.','Uno es correcto. El otro detalle habla de los efectos o las soluciones, no de cómo están diseñadas las apps. Vuelve a mirar el párrafo 2.')
+      : bi('Not yet. Both of your choices describe effects or solutions. The details that show how apps are designed are in paragraph 2.','Todavía no. Tus dos opciones describen efectos o soluciones. Los detalles que muestran cómo están diseñadas las apps están en el párrafo 2.');
+  results[3] = right === 2; grade();
+}
+document.getElementById('checkQ3').onclick = checkQ3;
+
+/* Item 4: author's purpose */
+const FB4 = {
+  A:bi("Not quite. The passage says most apps are free. The comparison is about behavior, not cost.","No exactamente. El texto dice que la mayoría de las apps son gratis. La comparación es sobre el comportamiento, no el costo."),
+  B:bi("Correct! A slot machine gives a variable reward, so people keep pulling the lever. Apps work the same way.","¡Correcto! Una máquina tragamonedas da una recompensa variable, así que la gente sigue jalando la palanca. Las apps funcionan igual."),
+  C:bi("Not quite. The author never says teens gamble. The slot machine is a comparison, not a fact about teens.","No exactamente. El autor nunca dice que los adolescentes apuestan. La máquina es una comparación, no un dato sobre ellos."),
+  D:bi("Not quite. Some videos are boring and some are great; the point is that you cannot predict which.","No exactamente. Algunos videos son aburridos y otros buenísimos; el punto es que no puedes predecir cuál.")
+};
+const q4 = document.querySelector('[data-item="q4"]'), fb4 = document.querySelector('[data-fb="q4"]');
+q4.querySelectorAll('button').forEach(b => b.onclick = () => {
+  q4.querySelectorAll('button').forEach(x => x.classList.remove('correct','wrong'));
+  b.classList.add(b.dataset.ok ? 'correct' : 'wrong'); fb4.innerHTML = FB4[b.dataset.k];
+});
+
+/* Item 5: listening (paragraph 5, two plays) */
+let playsLeft = 2;
+document.getElementById('listenQ5').onclick = () => {
+  if(!synth) return;
+  if(playsLeft <= 0) return;
+  playsLeft--; document.getElementById('listenCount').innerHTML = bi(`Plays left: ${playsLeft} `, `Reproducciones restantes: ${playsLeft}`);
+  if(current>=0){ queue=[]; run++; synth.cancel(); finish(); }
+  const u = makeUtt(texts[4]); u.rate = Math.min(u.rate, 0.9); synth.speak(u);
+  if(playsLeft === 0) document.getElementById('listenQ5').disabled = true;
+};
+const FB5 = {
+  A:bi("Not quite. The timer is the third solution the speaker gives.","No exactamente. El temporizador es la tercera solución que da el hablante."),
+  B:bi("Not quite. Turning off notifications is the second solution.","No exactamente. Apagar las notificaciones es la segunda solución."),
+  C:bi("Correct! The speaker says the simplest solution is distance: the phone in a backpack, a drawer, or another room.","¡Correcto! El hablante dice que la solución más simple es la distancia: el teléfono en la mochila, un cajón u otra habitación."),
+  D:bi("Not quite. The speaker says to keep messages from family on, not to ask for fewer.","No exactamente. El hablante dice que dejes activados los mensajes de la familia, no que pidas menos.")
+};
+const q5 = document.querySelector('[data-item="q5"]'), fb5 = document.querySelector('[data-fb="q5"]');
+q5.querySelectorAll('button').forEach(b => b.onclick = () => {
+  q5.querySelectorAll('button').forEach(x => x.classList.remove('correct','wrong'));
+  b.classList.add(b.dataset.ok ? 'correct' : 'wrong'); fb5.innerHTML = FB5[b.dataset.k];
+});
+
+/* Autograde */
+const results = {1:null, 2:null, 3:null, 4:null, 5:null};   // null = not answered, true/false = graded
+const q1 = document.getElementById('choices');
+const RATING = [
+  {min:5, name:"Level 5 · Advanced · Avanzado", desc:bi("You understood the central idea, word meanings, the author's purpose, and the spoken paragraph. You are ready for grade-level text with little support.","Entendiste la idea central, el significado de las palabras, el propósito del autor y el párrafo hablado. Estás listo para textos de tu grado con poco apoyo.")},
+  {min:4, name:"Level 4 · Early Advanced · Avanzado inicial", desc:bi("You understood most of the text and the listening. Reread the one you missed with its feedback; you are close to full proficiency on this task.","Entendiste la mayor parte del texto y del audio. Vuelve a leer la que fallaste con su explicación; estás cerca del dominio completo en esta tarea.")},
+  {min:3, name:"Level 3 · Intermediate · Intermedio", desc:bi("You understood the main points but missed some details or word meanings. Use the word cards and listen again to the paragraphs you found hard.","Entendiste las ideas principales pero fallaste algunos detalles o significados. Usa las tarjetas de palabras y vuelve a escuchar los párrafos difíciles.")},
+  {min:2, name:"Level 2 · Early Intermediate · Intermedio inicial", desc:bi("You are building understanding. Listen to each paragraph while reading, tap every blue word, and try the questions again.","Estás construyendo tu comprensión. Escucha cada párrafo mientras lees, toca todas las palabras azules y vuelve a intentar las preguntas.")},
+  {min:0, name:"Level 1 · Beginning · Principiante", desc:bi("Start with the word list and listen to one paragraph at a time. Ask your teacher or a partner to talk through the questions with you.","Empieza con las palabras y escucha un párrafo a la vez. Pide a tu maestro o a un compañero que repasen las preguntas contigo.")}
+];
+const GROUPS = {1:q1, 2:q2, 3:q3, 4:q4, 5:q5};
+function grade(){
+  // one attempt per question: lock the choices once answered
+  Object.keys(GROUPS).forEach(q => GROUPS[q].querySelectorAll('button').forEach(b => b.disabled = results[q] !== null));
+  document.getElementById('checkQ3').disabled = results[3] !== null;
+  const n = Object.values(results).filter(v => v === true).length;
+  document.getElementById('scoreNum').textContent = n;
+  const labels = {1:'Q1 Reading a graph', 2:'Q2 Word meaning', 3:'Q3 Supporting details', 4:"Q4 Author's purpose", 5:'Q5 Listening'};
+  document.querySelectorAll('#scoreList li').forEach(li => {
+    const q = li.dataset.q, r = results[q];
+    li.classList.toggle('ok', r === true); li.classList.toggle('no', r === false);
+    li.innerHTML = `<span class="dot"></span>${labels[q]} <em>${r === null ? (q==='3'?'not checked · sin revisar':'not answered · sin responder') : r ? 'correct · correcta' : 'incorrect · incorrecta'}</em>`;
+  });
+  const done = Object.values(results).every(v => v !== null);
+  const rating = document.getElementById('rating');
+  if(done){
+    const r = RATING.find(x => n >= x.min);
+    document.getElementById('ratingName').textContent = r.name;
+    document.getElementById('ratingDesc').innerHTML = r.desc;
+    rating.hidden = false;
+    document.getElementById('scoreMsg').innerHTML = n === 5 ? bi('All five correct. Excellent work!','Las cinco correctas. ¡Excelente trabajo!') : bi(`${n} of 5 correct. Read the feedback under each incorrect item to see why.`,`${n} de 5 correctas. Lee la explicación debajo de cada pregunta incorrecta para ver por qué.`);
+  } else {
+    rating.hidden = true;
+    const missing = Object.keys(results).filter(q => results[q] === null).map(q => 'Q' + q).join(', ');
+    document.getElementById('scoreMsg').innerHTML = bi(`${Object.values(results).filter(v => v !== null).length} of 5 questions answered. Still to do: ${missing}.`,`${Object.values(results).filter(v => v !== null).length} de 5 preguntas respondidas. Faltan: ${missing}.`);
+  }
+  updateSubmitLink();
+}
+q1.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { results[1] = !!b.dataset.ok; grade(); }));
+q2.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { results[2] = !!b.dataset.ok; grade(); }));
+q4.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { results[4] = !!b.dataset.ok; grade(); }));
+q5.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { results[5] = !!b.dataset.ok; grade(); }));
+/* Submit to Jotform: the link opens the form with results prefilled */
+const FORM_URL = 'https://form.jotform.com/262995533300054';
+/* Exit ticket meter */
+function exitStats(){
+  const t = document.getElementById('exitText').value.trim();
+  const sentences = t ? t.split(/[.!?]+(?:\s|$)/).filter(s => s.trim().split(/\s+/).length >= 3).length : 0;
+  const words = t ? t.split(/\s+/).filter(Boolean).length : 0;
+  const lower = ' ' + t.toLowerCase().replace(/[^a-z\s]/g, ' ') + ' ';
+  const used = Object.keys(VOCAB).filter(w => { const base = w.toLowerCase().replace(/(ing|ers|ed|s)$/, ''); return lower.includes(' ' + base); });
+  const allFive = typeof oreacIns !== 'undefined' && oreacIns.every(i => i.value.trim());
+  return { t, sentences, words, vocab: used.length, ok: allFive && used.length >= 3 };
+}
+function updateExit(){
+  const s = exitStats();
+  const set = (id, txt, ok) => { const el = document.getElementById(id); el.textContent = txt; el.classList.toggle('ok', ok); };
+  const filled = oreacIns.filter(i => i.value.trim()).length;
+  set('exitSent', `${filled} of 5 letters · letras`, filled === 5);
+  set('exitVocab', `${s.vocab} vocabulary word${s.vocab === 1 ? '' : 's'} · vocabulario`, s.vocab >= 3);
+  set('exitWords', `${s.words} words · palabras`, s.words > 0);
+  const missing = oreacIns.filter(i => !i.value.trim()).map(i => i.dataset.k);
+  document.getElementById('exitFb').innerHTML = missing.length
+    ? bi(`Still to write: ${missing.join(', ')}.`,`Falta escribir: ${missing.join(', ')}.`)
+    : s.vocab < 3 ? bi(`All five letters done. Use ${3 - s.vocab} more vocabulary word${3 - s.vocab === 1 ? '' : 's'} (tap the blue words in the passage for ideas).`,`Las cinco letras listas. Usa ${3 - s.vocab} palabra${3 - s.vocab === 1 ? '' : 's'} más de vocabulario (toca las palabras azules del texto para ideas).`)
+    : bi('Your O·R·E·A·C paragraph is ready. Check your name above, then press Submit.','Tu párrafo O·R·E·A·C está listo. Revisa tu nombre arriba y luego pulsa Enviar.');
+  updateSubmitLink();
+}
+/* O·R·E·A·C lines → one paragraph */
+const oreacIns = [...document.querySelectorAll('.oreac-in')];
+function buildExit(){
+  const parts = oreacIns.map(i => {
+    let t = i.value.trim(); i.closest('.oreac-row').classList.toggle('filled', t.length > 0);
+    if(t && !/[.!?]$/.test(t)) t += '.';
+    return t;
+  }).filter(Boolean);
+  document.getElementById('exitText').value = parts.join(' ');
+  const pv = document.getElementById('exitPreview');
+  if(parts.length) pv.textContent = parts.join(' ');
+  else pv.innerHTML = '<span class="ps-empty">Your five sentences will appear here as one paragraph.</span>';
+  updateExit();
+}
+oreacIns.forEach(i => i.addEventListener('input', buildExit));
+
+function updateSubmitLink(){
+  const link = document.getElementById('submitLink');
+  const answered = Object.values(results).every(v => v !== null);
+  const ex = exitStats();
+  const done = answered && ex.ok;
+  const n = Object.values(results).filter(v => v === true).length;
+  const line = q => results[q] === null ? 'not answered' : results[q] ? 'correct' : 'incorrect';
+  const vals = {
+    name: document.getElementById('sname').value.trim(),
+    score: `${n} / 5`,
+    rating: answered ? RATING.find(x => n >= x.min).name : '',
+    q1: line(1), q2: line(2), q3: line(3), q4: line(4), q5: line(5),
+    exit: ex.t
+  };
+  // Jotform prefills by each field's "unique name". Send both the names we asked for
+  // and the names Jotform generates from the labels, so either set works.
+  const p = new URLSearchParams({
+    studentName: vals.name,
+    score: vals.score, scoreOut: vals.score,
+    rating: vals.rating, practiceElpa21: vals.rating,
+    q1: vals.q1, q1Reading: vals.q1,
+    q2: vals.q2, q2Word: vals.q2,
+    q3: vals.q3, q3Supporting: vals.q3,
+    q4: vals.q4, q4Authors: vals.q4,
+    q5: vals.q5, q5Listening: vals.q5,
+    exitTicket: vals.exit, exitTicketWho: vals.exit
+  });
+  link.href = FORM_URL + '?' + p.toString();
+  link.setAttribute('aria-disabled', done ? 'false' : 'true');
+  document.getElementById('submitNote').innerHTML = done
+    ? bi('Press Submit. A short form opens with your results and exit ticket filled in; add your class period and your Part B sentence, then press Submit there.','Pulsa Enviar. Se abre un formulario corto con tus resultados y tu boleto de salida ya llenos; agrega tu periodo de clase y tu oración de la Parte B, y luego pulsa Enviar ahí.')
+    : !answered ? bi('Finish all five Test prep questions first.','Primero termina las cinco preguntas de preparación.') : bi('Finish your O·R·E·A·C exit ticket (all five letters, 3 vocabulary words) to turn on Submit.','Termina tu boleto de salida O·R·E·A·C (las cinco letras, 3 palabras de vocabulario) para activar Enviar.');
+}
+document.getElementById('sname').addEventListener('input', updateSubmitLink);
+
+</script>
+
+</body>
+</html>
