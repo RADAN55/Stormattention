@@ -102,6 +102,8 @@ button .es,.choices .es{display:block;font-size:.85em}
 .poll button .es,.ad button .es{display:inline;margin-left:.3em;font-size:.85em}
 body.no-es .es,body.no-es .para-es,body.no-es .es-toggle{display:none!important}
 .lang{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;display:flex;justify-content:flex-end;margin-bottom:.5rem}
+.lang{gap:.5rem;align-items:center}
+.agenda-link{font-weight:700;color:var(--accent);border:2px solid var(--accent);border-radius:999px;padding:.3rem .8rem;text-decoration:none;font-size:.9rem;background:var(--surface)}
 .lang button{font-weight:700;background:var(--vocab);color:#fff;border-color:var(--vocab);border-radius:999px;padding:.35rem .9rem}
 .es-toggle{font-size:.8rem;padding:.2rem .55rem;margin:.3rem 0 0 2.9rem;color:var(--vocab);border-color:var(--vocab)}
 .para-es{display:none;margin:.3rem .75rem .2rem 2.9rem;padding:.5rem .7rem;border-left:3px solid var(--vocab);background:var(--vocab-soft);border-radius:0 8px 8px 0;font-size:1.02rem;line-height:1.55;font-style:italic;color:var(--fg)}
@@ -258,7 +260,7 @@ h2{font-family:var(--font-read);font-size:1.4rem;margin:2.5rem 0 .25rem}
 </head>
 <body>
 <div class="wrap">
-  <div class="lang"><button id="langBtn" aria-pressed="true">Español: ON</button></div>
+  <div class="lang"><a class="agenda-link" href="agenda.html" target="_blank" rel="noopener">📋 Agenda board · Agenda</a><button id="langBtn" aria-pressed="true">Español: ON</button></div>
   <div class="eyebrow">Read &amp; listen · Informational text <span class="es">Lee y escucha · Texto informativo</span></div>
   <h1>Your Attention Is for Sale</h1>
   <p class="howto">Press <strong>Listen to all</strong> to hear the whole passage, or the round button beside a paragraph to hear only that part. Tap any <span class="v" style="cursor:default">blue word</span> to see what it means.</p>
